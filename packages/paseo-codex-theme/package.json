@@ -1,0 +1,44 @@
+{
+  "name": "@chlrc/paseo-codex-theme",
+  "version": "0.1.0",
+  "files": [
+    "paseo-plugin.json",
+    "OVERVIEW.md",
+    "index.client.ts",
+    "index.client.tsx",
+    "index.server.ts",
+    "index.server.tsx",
+    "client/",
+    "server/",
+    "shared/",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@getpaseo/plugin": "0.11.2",
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0",
+    "@types/react": "~19.2.0"
+  },
+  "license": "MIT",
+  "description": "Codex 风格的浅色与深色主题：中性灰阶、柔和面板和黑白强调色。",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KiritoKing/paseo-plugins.git",
+    "directory": "packages/paseo-codex-theme"
+  },
+  "homepage": "https://github.com/KiritoKing/paseo-plugins/tree/main/packages/paseo-codex-theme#readme",
+  "bugs": {
+    "url": "https://github.com/KiritoKing/paseo-plugins/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

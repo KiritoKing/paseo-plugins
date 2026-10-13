@@ -1,0 +1,23 @@
+{
+  "name": "@chlrc/paseo-plugins-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KiritoKing/paseo-plugins.git"
+  },
+  "scripts": {
+    "check:public": "node scripts/check-public.mjs",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "pack:inspect": "node scripts/check-public.mjs --pack",
+    "check": "npm run check:public && npm run typecheck && npm test && npm run pack:inspect"
+  }
+}
