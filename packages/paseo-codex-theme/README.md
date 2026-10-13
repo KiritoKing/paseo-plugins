@@ -1,6 +1,6 @@
 # Codex Theme for Paseo
 
-独立的 Paseo 主题插件，提供 **Codex Light** 和 **Codex Dark**。以中性灰阶、柔和面板层次和黑白强调色为基础，由 Paseo 原生主题系统应用到菜单、聊天、插件面板和终端。
+独立的 Paseo 主题插件，提供 **Codex Light** 和 **Codex Dark**。以中性灰阶、柔和面板层次和蓝色强调色为基础，由 Paseo 原生主题系统应用到菜单、聊天、插件面板和终端。
 
 这是 Codex 风格的独立配色设计，不是 OpenAI 官方主题或逐像素布局复刻。字体、间距、侧栏结构、消息和工具行为由 Paseo 保持原有实现。
 
