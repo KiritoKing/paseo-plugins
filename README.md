@@ -2,23 +2,15 @@
 
 个人 Paseo 插件 monorepo，使用 `@chlrc` npm scope。各插件独立安装、独立版本；这是非官方项目。
 
-| 包 | Paseo 安装 ID | 功能 |
-| --- | --- | --- |
-| [@chlrc/paseo-ux](packages/paseo-ux/README.md) | `paseo-ux` | 连续图片聚合、媒体面板、大图手势与方向键、工作区会话恢复 |
-| [@chlrc/paseo-aiw-companion](packages/paseo-aiw-companion/README.md) | `aiw-companion` | AIW 多仓文件树、Diff、搜索与可拖拽布局 |
-| [@chlrc/paseo-codex-theme](packages/paseo-codex-theme/README.md) | `paseo-codex-theme` | 独立的 Codex 风格浅色与深色主题 |
+| 包 | Paseo 安装 ID | 包版本 | Paseo 兼容范围 | 功能 |
+| --- | --- | --- | --- | --- |
+| [@chlrc/paseo-ux](packages/paseo-ux/README.md) | `paseo-ux` | 0.2.5 | `>=0.11.2 <0.12.0` | 连续图片聚合、媒体面板、大图手势与方向键、工作区会话恢复 |
+| [@chlrc/paseo-aiw-companion](packages/paseo-aiw-companion/README.md) | `aiw-companion` | 0.5.1 | `>=0.11.1` | AIW 多仓文件树、Diff、搜索与可拖拽布局 |
+| [@chlrc/paseo-codex-theme](packages/paseo-codex-theme/README.md) | `paseo-codex-theme` | 0.1.1 | `>=0.11.2 <0.12.0` | 独立的 Codex 风格浅色与深色主题 |
 
 ## 安装
 
-这些包目前提供 Git 源码安装；仓库中的 npm 名称不代表已经发布到 npm。
-
-```sh
-paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-ux
-paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-aiw-companion
-paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-codex-theme
-```
-
-只安装需要的插件。插件安装在对应 daemon 上；主题插件安装后，在设置 → 外观选择 Codex Light 或 Codex Dark。各包的 `OVERVIEW.md` 与 README 说明兼容版本和使用方式。
+目前从公开 GitHub 仓库按需安装；包名只是 npm 元数据，尚不能据此假定 npm 包已经发布。安装命令、daemon 选择、兼容版本、升级和移除注意事项见[快速接入指南](docs/quickstart.md)。插件会安装到命令所选的 Paseo daemon。
 
 ## 开发
 
