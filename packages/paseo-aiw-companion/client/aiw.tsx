@@ -1,7 +1,7 @@
 import { useSettings, useRpc, useWorkspace } from "@getpaseo/plugin/client";
 import { ScrollView, TextInput } from "@getpaseo/plugin/client/react-native";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Switch, Text, View } from "react-native";
 import type { PluginTheme } from "@getpaseo/plugin";
 import type { PluginWorkspacePanelProps } from "@getpaseo/plugin/client";
@@ -9,6 +9,7 @@ import { catalogRpc, changesRpc, fileRpc, patchRpc, preferences, searchRpc, type
 import { filterChangeGroups, matchesFileFilter, type FileFilter } from "../shared/file-filters";
 import { subscribeToFileRequests, type FileLocator } from "./navigation";
 import type { Reader, ReaderMode } from "./model";
+import { patchQueryKey, retainPatchData } from "./reader-cache";
 import { PreviewPane } from "./preview";
 import { ChangeTree, FileTree, changeTreeExpansionKeys, type Expanded } from "./tree";
 import { Button, IconButton, Empty, ErrorText, makeStyles } from "./controls";
@@ -30,14 +31,18 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
   const [reader, setReader] = useState<Reader | null>(null); const [readerMode, setReaderMode] = useState<ReaderMode>("file"); const [expanded, setExpanded] = useState<Expanded>(new Set()); const [filesInitialized, setFilesInitialized] = useState(false); const [changesInitialized, setChangesInitialized] = useState(false); const [revision, setRevision] = useState(0); const [patternsOpen, setPatternsOpen] = useState(false);
   const changes = useQuery({ queryKey: ["aiw", "changes", workspaceId, scope], queryFn: () => changesCall({ workspaceId, scope }), enabled: Boolean(catalog.data) });
   const settings = useSettings(preferences); const saved = catalog.data && settings.status === "ready" ? settings.values.projects[catalog.data.projectKey] : undefined;
-  const file = useQuery({ queryKey: ["aiw", "file", workspaceId, reader?.locator.repoId, reader?.locator.path, reader?.locator.line, revision], queryFn: () => fileCall({ workspaceId, repoId: reader!.locator.repoId, path: reader!.locator.path, startLine: reader!.locator.line ?? 1 }), enabled: readerMode === "file" && Boolean(reader) });
-  const patch = useQuery({ queryKey: ["aiw", "patch", workspaceId, reader?.locator.repoId, reader?.locator.path, reader?.change?.origin, scope, reader?.group?.snapshotId, revision], queryFn: () => patchCall({ workspaceId, repoId: reader!.locator.repoId, path: reader!.locator.path, oldPath: reader!.change?.oldPath, origin: reader!.change?.origin ?? "combined", scope, expectedSnapshot: reader!.group!.snapshotId }), enabled: Boolean(reader?.group) && (readerMode === "diff" || reader?.change?.status === "D") });
+  const file = useQuery({ queryKey: ["aiw", "file", workspaceId, reader?.locator.repoId, reader?.locator.path, reader?.locator.line], queryFn: () => fileCall({ workspaceId, repoId: reader!.locator.repoId, path: reader!.locator.path, startLine: reader!.locator.line ?? 1 }), enabled: readerMode === "file" && Boolean(reader) });
+  const patchKey = patchQueryKey(workspaceId, reader, scope);
+  const patch = useQuery({ queryKey: patchKey, queryFn: () => patchCall({ workspaceId, repoId: reader!.locator.repoId, path: reader!.locator.path, oldPath: reader!.change?.oldPath, origin: reader!.change?.origin ?? "combined", scope, expectedSnapshot: reader!.group!.snapshotId }), enabled: Boolean(reader?.group) && (readerMode === "diff" || reader?.change?.status === "D"), placeholderData: (previous, previousQuery) => retainPatchData(previous, previousQuery?.queryKey, patchKey) });
   const groups = useMemo(() => changes.data?.groups ?? [], [changes.data]);
   const visibleGroups = useMemo(() => filterChangeGroups(groups, filter, saved), [groups, filter, saved]);
   const countFiles = (kind: FileFilter) => groups.reduce((count, group) => count + group.files.filter(file => matchesFileFilter(file, kind, saved)).length, 0);
   const toggle = useCallback((key: string) => setExpanded(current => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; }), []);
-  const refresh = useCallback(() => { void catalog.refetch(); void changes.refetch(); if (readerMode === "file" && reader) void file.refetch(); setRevision(value => value + 1); }, [catalog, changes, readerMode, reader, file]);
-  useEffect(() => { const timer = setInterval(refresh, POLL_MS); return () => clearInterval(timer); }, [refresh]);
+  const refresh = useCallback((manual = false) => { void catalog.refetch(); void changes.refetch(); if (readerMode === "file" && reader) void file.refetch(); if (manual) setRevision(value => value + 1); }, [catalog.refetch, changes.refetch, readerMode, reader, file.refetch]);
+  // Poll in the background without changing reader query identities or resetting the timer.
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
+  useEffect(() => { const timer = setInterval(() => refreshRef.current(), POLL_MS); return () => clearInterval(timer); }, []);
   useEffect(() => subscribeToFileRequests(locator => { if (locator.workspaceId !== workspaceId) return; setExpanded(current => { const next = new Set(current); next.add(`${locator.repoId}:`); const parts = locator.path.split("/"); let path = ""; for (const part of parts.slice(0, -1)) { path = path ? `${path}/${part}` : part; next.add(`${locator.repoId}:${path}`); } return next; }); setReader({ locator }); setReaderMode("file"); setTab("files"); }), [workspaceId]);
   useEffect(() => { if (!filesInitialized && catalog.data?.repos[0]) { setExpanded(new Set([`${catalog.data.repos[0].id}:`])); setFilesInitialized(true); } }, [filesInitialized, catalog.data]);
   useEffect(() => { if (!changesInitialized && changes.data) { setExpanded(current => new Set([...current, ...changeTreeExpansionKeys(changes.data.groups)])); setChangesInitialized(true); } }, [changesInitialized, changes.data]);
@@ -52,7 +57,7 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
     {tab === "changes" ? <><View style={styles.row}><Text style={styles.muted}>对比范围</Text>{(["all", "branch", "working"] as Scope[]).map(value => <Choice key={value} theme={theme} selected={scope === value} label={value === "all" ? "全部变更" : value === "branch" ? "分支已提交" : "未提交"} onPress={() => selectScope(value)} />)}</View><View style={styles.row}><Text style={styles.muted}>文件类型</Text><Choice theme={theme} label="全部文件" selected={filter === "all"} onPress={() => setFilter("all")} /><Choice theme={theme} label={`代码文件 ${countFiles("code")}`} selected={filter === "code"} onPress={() => setFilter("code")} /><Choice theme={theme} label={`文档文件 ${countFiles("documents")}`} selected={filter === "documents"} onPress={() => setFilter("documents")} /></View></> : null}
     {catalog.isLoading ? <Empty theme={theme}>正在读取 AIW 仓库目录…</Empty> : null}{catalog.error ? <ErrorText theme={theme} error={catalog.error} /> : null}
     <SplitPane key={workspaceId} workspaceId={workspaceId} theme={theme} compact={compact} first={({ stacked, toggleDirection }) => <View style={[styles.surface, { flex: 1, minHeight: 0, minWidth: 0, overflow: "hidden" }]}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderBottomWidth: 1, borderColor: theme.colors.border }}><Text style={[styles.muted, { flex: 1 }]}>{tab === "files" ? "文件树" : "改动树"}</Text>{tab === "files" ? <><Text style={styles.muted}>忽略文件</Text><Switch accessibilityLabel="显示忽略文件" value={showIgnored} onValueChange={setShowIgnored} /></> : null}<IconButton theme={theme} label="刷新" icon="RefreshCw" onPress={refresh} /><IconButton theme={theme} label={stacked ? "左右分栏" : "上下分栏"} icon={stacked ? "Columns2" : "Rows2"} onPress={toggleDirection} /><IconButton theme={theme} label="折叠全部" icon="ChevronsUp" onPress={() => setExpanded(current => new Set([...current].filter(key => tab === "changes" ? !key.startsWith("changes:") : key.startsWith("changes:"))))} /></View>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 7, paddingVertical: 3, borderBottomWidth: 1, borderColor: theme.colors.border }}><Text style={[styles.muted, { flex: 1 }]}>{tab === "files" ? "文件树" : "改动树"}</Text>{tab === "files" ? <><Text style={styles.muted}>忽略文件</Text><Switch accessibilityLabel="显示忽略文件" value={showIgnored} onValueChange={setShowIgnored} /></> : null}<IconButton theme={theme} label="刷新" icon="RefreshCw" onPress={() => refresh(true)} /><IconButton theme={theme} label={stacked ? "左右分栏" : "上下分栏"} icon={stacked ? "Columns2" : "Rows2"} onPress={toggleDirection} /><IconButton theme={theme} label="折叠全部" icon="ChevronsUp" onPress={() => setExpanded(current => new Set([...current].filter(key => tab === "changes" ? !key.startsWith("changes:") : key.startsWith("changes:"))))} /></View>
       <ScrollView contentContainerStyle={{ paddingVertical: 2 }}>
       {tab === "files" && catalog.data ? <FileTree workspaceId={workspaceId} repos={catalog.data.repos} showIgnored={showIgnored} expanded={expanded} toggle={toggle} selected={reader?.locator} onOpen={openFile} theme={theme} refreshKey={revision} /> : null}
       {tab === "changes" ? <>{changes.isLoading ? <Empty theme={theme}>读取改动中…</Empty> : null}{changes.error ? <ErrorText theme={theme} error={changes.error} /> : null}<ChangeTree groups={visibleGroups} expanded={expanded} toggle={toggle} selected={reader?.locator} selectedChange={reader?.change} onOpen={openChange} theme={theme} empty={filter === "all" ? undefined : `该对比范围没有匹配的${filter === "code" ? "代码" : "文档"}文件。`} /></> : null}
