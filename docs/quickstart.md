@@ -1,6 +1,6 @@
 # Paseo 插件快速接入
 
-本仓库的三个插件从 GitHub monorepo 的各自子目录安装。以下命令使用发布引用 `onboarding-20261019`；执行前请确认该 Git 引用已发布。
+本仓库的三个插件从 GitHub monorepo 的各自子目录安装。以下命令使用发布引用 `onboarding-20261019-r1`；执行前请确认该 Git 引用已发布。
 
 ## 前置条件
 
@@ -21,9 +21,9 @@
 | Codex Theme | `paseo-codex-theme` | 0.1.1 | `>=0.11.2 <0.12.0` |
 
 ```sh
-paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-ux --ref onboarding-20261019
-paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-aiw-companion --ref onboarding-20261019
-paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-codex-theme --ref onboarding-20261019
+paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-ux --ref onboarding-20261019-r1
+paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-aiw-companion --ref onboarding-20261019-r1
+paseo plugin add git:KiritoKing/paseo-plugins:packages/paseo-codex-theme --ref onboarding-20261019-r1
 ```
 
 如果要安装到另一台 daemon，在命令末尾加 `--host <host>`。也可以在该 daemon 的 **Settings → Plugins** 页面粘贴同一个 Git source，并选择安装。有关 Git 子目录语法，见 Paseo 的[插件来源参考](https://paseo.sh/docs/plugins/reference#plugin-sources)。
@@ -52,7 +52,7 @@ paseo plugin logs <plugin-id>
 要显式更新到某个 Git 引用，使用：
 
 ```sh
-paseo plugin update <plugin-id> --ref onboarding-20261019
+paseo plugin update <plugin-id> --ref onboarding-20261019-r1
 ```
 
 CLI 会直接应用显式指定的引用，不再逐项询问；运行前确认目标引用。临时停用可用 `paseo plugin disable <plugin-id>`，之后可用 `paseo plugin enable <plugin-id>` 恢复。完全移除用 `paseo plugin remove <plugin-id>`。移除会清理该安装 ID 的插件设置目录；如果要保留 AIW 布局、规则或其他插件偏好，先备份对应设置再移除或更换安装来源。

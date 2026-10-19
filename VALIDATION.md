@@ -1,5 +1,12 @@
 # 验证记录
 
+## CI 依赖修复（2026-10-19）
+
+- GitHub Actions run 39217370931 在 AIW Companion 服务测试调用 rg 时失败，日志显示 spawn rg ENOENT；runner 未预装 ripgrep。该 run 的类型检查和 UX 14 项测试通过。
+- .github/workflows/ci.yml 在测试前通过 apt 安装 ripgrep，并输出 rg --version。本次没有更改 Node.js、npm 或 Git 配置。
+- docs/quickstart.md 的安装和更新示例改用 onboarding-20261019-r1。原 onboarding-20261019 tag 保持不变。
+- 本地没有重复运行相同测试；修复提交的远端验证结果以对应 GitHub Actions 运行记录为准。
+
 ## 接入快照 onboarding-20261019（2026-10-19）
 
 - 基于主题链接修复提交 `e50deb6`，本次只补充 README、快速接入指南与验证记录，不新增运行时功能。
