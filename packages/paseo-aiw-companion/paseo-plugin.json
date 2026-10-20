@@ -6,12 +6,5 @@
   "requirements": {
     "paseo": ">=0.11.1"
   },
-  "build": [
-    [
-      "npm",
-      "ci",
-      "--omit=dev",
-      "--ignore-scripts"
-    ]
-  ]
+  "build": [["pnpm", "install", "--prod", "--frozen-lockfile", "--ignore-scripts"]]
 }

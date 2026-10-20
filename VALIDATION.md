@@ -1,5 +1,52 @@
 # 验证记录
 
+## PR 提交前复查（2026-10-20）
+
+基于主干 `663df64`，平台为 macOS arm64；格式化与工程迁移拆成两个提交。
+主干的 AIW 预览缓存修复及其测试完整保留；主题仍为主干的 0.1.0 与原有配色，
+链接颜色修复由独立 PR 交付。发行测试从 manifest 读取当前版本，避免依赖其他分支的版本号。
+
+- Node.js 24.22.0 运行完整 `pnpm check` 通过：环境、Biome、公开源码、导入边界、
+  三包类型检查、28 项业务测试、14 项工具链测试、四个浏览器夹具构建及三包隔离打包。
+- Node.js 22.22.3 运行 `pnpm test`，42/42 通过；此版本本轮未重复运行完整 `pnpm check`。
+- 解包后的实际运行入口编译通过，最终包文件数为 AIW 28、主题 8、UX 23；AIW 的
+  消费者依赖安装通过。该检查没有覆盖已有 `work/packages/` 下的历史产物。
+- 18 份 Markdown 的本地链接与 `git diff --check` 通过。真实 Paseo 客户端、移动端、
+  发布授权和实际发布未验收；远端 CI 结论以该 PR 当前 revision 的 GitHub 检查为准。
+
+---
+
+## pnpm 与工程检查迁移（2026-10-20，实现阶段历史记录）
+
+基线为 `e50deb6`，以下结果对应同步到最新主干之前的实现阶段工作树，平台为 macOS arm64。
+开发工具链为 pnpm 10.34.7、TypeScript 5.9.3、Biome 2.5.15。SDK 和三个插件的
+版本号保持原值；源码统一格式，并对部分 Hook、循环和浏览器夹具作 lint 整改。
+
+- 从原 npm 锁文件导入 pnpm 锁文件，冻结安装通过；开发工具集中到根工作区。
+  AIW 的消费者锁文件单独维护，所有 341 个解析来源均为公共 npm registry。
+  `pnpm lock:runtime` 再生成通过，锁文件内容保持一致。
+- Node.js 22.23.3 和 24.22.0 分别运行完整 `pnpm check`，均通过：环境、格式与
+  lint、公开文件、导入边界、三包类型检查、26 项业务测试、14 项工具链回归测试、
+  四个浏览器夹具构建及三个包的隔离安装/入口编译。回归测试包含新增 workspace、
+  缺失入口、跨包导入、非公共依赖来源、生命周期脚本和发行条件。
+- 在独立源码副本的 AIW 包目录执行 Git 准备命令
+  `pnpm install --prod --frozen-lockfile --ignore-scripts` 成功；随后确认 minimatch、
+  refractor 和 yaml 的生产入口均可导入。
+- `pnpm pack:release` 成功生成三个 tarball；独立读回文件数为 AIW 27、主题 8、
+  UX 23。各包带 CHANGELOG，AIW 带消费者锁；npm 产物不含 Git 专用准备命令、
+  测试或依赖目录。产物和 SHA-256 清单位于忽略的 `work/packages/`。
+- `actionlint 1.7.12` 检查 CI 和手动发行 workflow 通过；未启用 shellcheck/pyflakes。
+  Markdown 本地链接检查与 `git diff --check` 通过。
+- 使用 Paseo browser 访问独立夹具：会话选择与恢复得到正确的模拟 RPC 参数，
+  恢复后仍在原工作区页面；图片连续右键停在第三张，关闭后方向键恢复传递给页面。
+  浏览器日志没有运行错误。夹具使用模拟宿主 UI 和数据，不替代真实客户端验收。
+
+本轮未提交、推送或发布；远端 CI 未运行这些改动。真实 daemon/移动端界面、真实
+客户端截图、插件市场上架和 GitHub/npm trusted publisher 配置均未验收。手动发行
+workflow 默认仅上传产物，实际发布还需要主干、显式发布选项及外部授权设置。
+
+---
+
 2026-10-13，Node.js 24，本机 Paseo 0.11.2。
 
 ## Monorepo

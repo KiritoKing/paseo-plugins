@@ -1,0 +1,110 @@
+name: Prepare or publish a plugin
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Plugin directory
+        required: true
+        type: choice
+        options:
+          - paseo-ux
+          - paseo-aiw-companion
+          - paseo-codex-theme
+      version:
+        description: Exact version already recorded in the package manifest
+        required: true
+        type: string
+      tag:
+        description: npm dist-tag
+        required: true
+        default: latest
+        type: choice
+        options: [latest, next]
+      publish:
+        description: Publish the checked artifact (requires main and configured npm trust)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.package }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      artifact: ${{ steps.metadata.outputs.artifact }}
+      name: ${{ steps.metadata.outputs.name }}
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install system test dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ripgrep
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Validate package, version, channel and publication scope
+        id: metadata
+        env:
+          RELEASE_PACKAGE: ${{ inputs.package }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_PUBLISH: ${{ inputs.publish }}
+        run: node scripts/release-metadata.mjs
+      - run: pnpm check
+      - run: pnpm pack:release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: plugin-package
+          path: ${{ steps.metadata.outputs.artifact }}
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: inputs.publish && github.ref == 'refs/heads/main'
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARTIFACT: ${{ needs.prepare.outputs.artifact }}
+      NPM_PACKAGE: ${{ needs.prepare.outputs.name }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+    steps:
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.22.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: plugin-package
+          path: work/packages
+      - name: Require an unpublished version
+        run: |
+          node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          const result = spawnSync('npm', ['view', `${process.env.NPM_PACKAGE}@${process.env.RELEASE_VERSION}`, 'version', '--json'], { encoding: 'utf8', timeout: 30000 });
+          if (result.status === 0) throw new Error('Version already exists; reconcile registry state before any retry.');
+          if (!result.stderr?.includes('E404')) throw new Error('Registry availability could not be verified.');
+          JS
+      - name: Publish the checked tarball using npm trusted publishing
+        run: npm publish "$ARTIFACT" --access public --provenance --ignore-scripts --tag "$RELEASE_TAG"

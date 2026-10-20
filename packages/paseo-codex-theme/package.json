@@ -12,15 +12,14 @@
     "server/",
     "shared/",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@getpaseo/plugin": "0.11.2",
-    "typescript": "^5.9.3",
-    "@types/node": "^22.0.0",
     "@types/react": "~19.2.0"
   },
   "license": "MIT",

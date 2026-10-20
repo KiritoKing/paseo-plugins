@@ -18,21 +18,31 @@
 - **跨仓搜索**：独立查询和仓库选择，支持普通文本、正则、大小写以及路径 include/exclude。结果显示所属仓库，点击打开全文。
 - **刷新**：重新读取当前 worktree；业务仓视图每 20 秒刷新。若 Diff 提示快照过期，刷新并重新选中改动。
 
-需要 Paseo ≥0.11.1、Git、ripgrep（rg）和可运行 `version`、`change status --json` 的 AIW CLI。优先使用工作区 `.aiw/bin/aiw`，其次使用 `AIW_COMPANION_AIW` 或 daemon 的 PATH。已有 `.aiw/aiw-toolchain.env` 时严格校验版本；无锁文件时支持宿主机安装，按实际状态结构、就绪标志和 Git 身份核验，不要求伪造锁文件。已选但未物化的业务仓显示未就绪标记，不进入默认搜索范围。读取发生在当前 Paseo daemon 所在机器。未就绪子仓显示错误，不会自动下载、物化、切分支或修复。
+需要 Paseo ≥0.11.1、pnpm、Git、ripgrep（rg）和可运行 `version`、`change status --json` 的 AIW CLI。优先使用工作区 `.aiw/bin/aiw`，其次使用 `AIW_COMPANION_AIW` 或 daemon 的 PATH。已有 `.aiw/aiw-toolchain.env` 时严格校验版本；无锁文件时支持宿主机安装，按实际状态结构、就绪标志和 Git 身份核验，不要求伪造锁文件。已选但未物化的业务仓显示未就绪标记，不进入默认搜索范围。读取发生在当前 Paseo daemon 所在机器。未就绪子仓显示错误，不会自动下载、物化、切分支或修复。
+
+## 兼容范围与宿主依赖
+
+声明的 Paseo 兼容范围为 `>=0.11.1`；历史验证记录涉及 Paseo 0.11.2。该记录只说明曾针对这个版本做过验证，不代表整个声明范围都经过验证或得到保证。
+
+Git 源码安装时，运行此插件的 daemon 通过 `pnpm install --prod --frozen-lockfile --ignore-scripts` 准备生产依赖，因此需要 pnpm、Git、ripgrep（`rg`）和 AIW CLI。CLI 必须支持 `version` 与 `change status --json`。AIW、仓库文件和 Git 状态均从 daemon 所在机器读取。AIW npm 发布包使用随包提供的 `npm-shrinkwrap.json` 供消费者安装锁定依赖，并移除 Git 源码安装专用的准备步骤。
+
+> **设置备份：** `paseo plugin remove aiw-companion` 会删除该 daemon 上此插件的设置目录。升级若需要先移除再安装，或卸载后可能需要恢复设置，请先备份对应的 `plugin-settings/aiw-companion/`；重装后恢复并读回。
 
 文件和 Diff 只读；不会暂存、提交、push 或修改业务仓。搜索流式接收结果，达到上限后停止扫描并提示截断；可转换的路径规则在扫描时收窄范围。大文件读取也有上限。跨仓搜索使用当前 worktree 内容，忽略 Git 忽略的文件；业务仓文件树可以选择显示忽略文件。禁止读取仓库外的符号链接。
 
 ## 本地维护
 
+以下命令均从 monorepo 根目录执行：
+
+需要 Node.js 22 或 24；开发默认使用 Node.js 24.22.0。pnpm 固定为 10.34.7，版本以根目录 `package.json` 的 `packageManager` 字段为准。
+
 ```sh
-npm install
-npm run typecheck
-npm test
-paseo plugin install /absolute/path/to/aiw-companion
+pnpm --filter @chlrc/paseo-aiw-companion typecheck
+pnpm --filter @chlrc/paseo-aiw-companion test
+paseo plugin install ./packages/paseo-aiw-companion
 paseo plugin reload aiw-companion
-paseo plugin ls aiw-companion --json
 ```
 
 文件树顶部提供刷新、折叠全部图标；文件视图可切换显示忽略文件。设置图标直接打开 Pattern 弹窗。
 
-源码修改后必须 reload。`running` 表示插件载入成功，真实工作区数据和交互以验收记录为准。
+修改源码后重载对应插件。更多包级命令见[根目录开发说明](../../README.md#开发)；功能边界见[概览](OVERVIEW.md)，本包变更记录见[CHANGELOG](CHANGELOG.md)。

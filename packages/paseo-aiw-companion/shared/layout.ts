@@ -7,9 +7,16 @@ export const workspaceLayoutSchema = z.object({
   treeHeight: z.number().finite().min(80).max(4000).default(280),
 });
 export type WorkspaceLayout = z.infer<typeof workspaceLayoutSchema>;
-export const layoutValuesSchema = z.object({ workspaces: z.record(z.string(), workspaceLayoutSchema).default({}) });
+export const layoutValuesSchema = z.object({
+  workspaces: z.record(z.string(), workspaceLayoutSchema).default({}),
+});
 // Separate settings keep layout saves independent of the Pattern modal's revision.
-export const layoutPreferences = defineSettings({ id: "layout", scope: "host", version: 1, schema: layoutValuesSchema });
+export const layoutPreferences = defineSettings({
+  id: "layout",
+  scope: "host",
+  version: 1,
+  schema: layoutValuesSchema,
+});
 export const layoutRpcs = settingsRpc(layoutPreferences.id);
 export const DIVIDER_SIZE = 12;
 
@@ -20,7 +27,13 @@ export function splitSize(extent: number, preferred: number, stacked: boolean): 
   return Math.max(minimum, Math.min(preferred, available - previewMinimum));
 }
 
-export function stackLayout(direction: WorkspaceLayout["direction"], compact: boolean, width: number): boolean {
+export function stackLayout(
+  direction: WorkspaceLayout["direction"],
+  compact: boolean,
+  width: number,
+): boolean {
   if (width > 0 && width < 480) return true;
-  return direction === "column" || (direction === "auto" && (compact || (width > 0 && width < 720)));
+  return (
+    direction === "column" || (direction === "auto" && (compact || (width > 0 && width < 720)))
+  );
 }
