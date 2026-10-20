@@ -60,5 +60,27 @@
       "height": 900,
       "sha256": "9a23607cd59c2006fe3c28b2f448df74bbf8da9dc9a034fe67e010bde6a47ee0"
     }
-  ]
+  ],
+  "followupOutputOnly": {
+    "recordedAt": "2026-10-20T16:02:54.384480+00:00",
+    "kind": "Actual React Native Web component fixture with synthetic data",
+    "verified": [
+      "output-only removes tool and reasoning rows and their headings",
+      "switching back restores prior category settings and visible source records",
+      "running-phase source records remain hidden",
+      "390px content frame with dark theme has no document overflow"
+    ],
+    "limits": [
+      "Host settings adapter and source records are synthetic.",
+      "The 390px content frame is not a real mobile device.",
+      "Native-client interaction and SDK 0.12 runtime acceptance are unverified."
+    ],
+    "image": {
+      "file": "output-only.jpg",
+      "format": "JPEG",
+      "width": 860,
+      "height": 680,
+      "sha256": "9aeb4662a657e4b9edf24ff630f388072a923044f5b226e108001f459eb9f3ef"
+    }
+  }
 }

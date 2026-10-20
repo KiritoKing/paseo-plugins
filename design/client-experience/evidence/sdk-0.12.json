@@ -31,5 +31,7 @@
     "shared/appearance.ts": "c356aeadfa4f3a10a472b6f29422186c9e8a67d03ec2b643ca540ca5e3260f10",
     "shared/message-presentation.ts": "8af543af388a478b2d23f6976ed629eb27fe862bba40082c775033143f3b3915",
     "shared/tool-presentation.ts": "571960bc260ef4f87f0e8a4382b373d60e6cba0e84116eae0826b54d52e406d7"
-  }
+  },
+  "sourceRevision": "985d92c73ae2fdd4c5ee5b33c8274e1c7674bc84",
+  "scopeNote": "Initial UI implementation; excludes the later output-only mode addition."
 }

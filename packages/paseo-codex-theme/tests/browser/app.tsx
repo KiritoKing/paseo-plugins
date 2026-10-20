@@ -68,36 +68,43 @@ function App() {
     host: { id: "fixture", label: "合成示例" },
     layout: { compact: frame > 0 || innerWidth < 640, platform: "web" as const },
   };
-  const tool = projectTool(
-    {
-      type: "tool_call",
-      callId: "fixture-shell",
-      name: "shell",
-      detail: {
-        type: "shell",
-        command: "npm run test:reconnect -- --runInBand",
-        cwd: "/example/project",
-        output: failed
-          ? "FAIL reconnect.test.ts\nExpected online, received connecting.\nPlease inspect the connection lifecycle."
-          : phase === "streaming"
-            ? "Running reconnect.test.ts…\n✓ retries bounded\n"
+  const toolSource = {
+    type: "tool_call",
+    callId: "fixture-shell",
+    name: "shell",
+    detail: {
+      type: "shell",
+      command: "npm run test:reconnect -- --runInBand",
+      cwd: "/example/project",
+      output:
+        phase === "streaming"
+          ? "Running reconnect.test.ts…\n✓ retries bounded\n"
+          : failed
+            ? "FAIL reconnect.test.ts\nExpected online, received connecting.\nPlease inspect the connection lifecycle."
             : "PASS reconnect.test.ts\n✓ retries bounded\n✓ subscription released\n✓ native ownership preserved\n\nTests: 9 passed",
-        ...(phase === "complete" ? { exitCode: failed ? 1 : 0 } : {}),
-      },
-      status: phase === "streaming" ? "running" : failed ? "failed" : "completed",
-      error: failed
+      ...(phase === "complete" ? { exitCode: failed ? 1 : 0 } : {}),
+    },
+    status: phase === "streaming" ? "running" : failed ? "failed" : "completed",
+    error:
+      phase === "complete" && failed
         ? { message: "Reconnect assertion failed", expected: "online", actual: "connecting" }
         : null,
-    },
-    phase,
-  )!;
-  const reasoning = projectReasoning(
-    {
-      type: "reasoning",
-      text: "先检查已有连接逻辑与订阅的生命周期，再调整呈现层。验证工具失败时的可见性，确保原生操作与其他插件仍能使用。",
-    },
-    phase,
-  )!;
+  };
+  const tool = projectTool(toolSource, phase);
+  const reasoningSource = {
+    type: "reasoning",
+    text: "先检查已有连接逻辑与订阅的生命周期，再调整呈现层。验证工具失败时的可见性，确保原生操作与其他插件仍能使用。",
+  };
+  const reasoning = projectReasoning(reasoningSource, phase)!;
+  const hidden = (id: string, source: unknown) => {
+    const transform = registrations.get(id)?.transform as
+      | ((input: {
+          item: unknown;
+          phase: "streaming" | "complete";
+        }) => { items: unknown[] } | undefined)
+      | undefined;
+    return transform?.({ item: source, phase })?.items.length === 0;
+  };
   const message = projectMessage({ type: "assistant_message", text: sourceText }, "complete")!;
   const common = { ...props, agentId: "synthetic-agent", timestamp: new Date(0) };
   const native = (text: string) => (
@@ -194,7 +201,9 @@ function App() {
                 调整会话阅读体验，并验证错误状态与关闭增强后的表现。
               </Text>
             </View>
-            {registrations.has("readable-reasoning") ? (
+            {hidden("readable-reasoning", reasoningSource) ? null : registrations.has(
+                "readable-reasoning",
+              ) ? (
               <Reasoning
                 {...common}
                 item={{ type: "plugin", kind: "readable-reasoning", version: 1, data: reasoning }}
@@ -202,13 +211,14 @@ function App() {
             ) : (
               native(reasoning.text)
             )}
-            {registrations.has("readable-tools") ? (
+            {hidden("readable-tools", toolSource) ? null : tool &&
+              registrations.has("readable-tools") ? (
               <Tool
                 {...common}
                 item={{ type: "plugin", kind: "readable-tool", version: 1, data: tool }}
               />
             ) : (
-              native(tool.command)
+              native(toolSource.detail.command)
             )}
             {registrations.has("readable-messages") ? (
               <Message
@@ -219,7 +229,7 @@ function App() {
               <div style={{ fontSize: 15, lineHeight: 1.8 }}>
                 <h2 style={{ fontSize: 21 }}>已完成连接状态的排版调整</h2>
                 <p>
-                  本例正文排版默认关闭，此处为原生正文的合成占位。开启设置后显示真实 Markdown 组件。
+                  本例正文排版已关闭，此处为原生正文的合成占位。开启设置后显示真实 Markdown 组件。
                 </p>
               </div>
             )}

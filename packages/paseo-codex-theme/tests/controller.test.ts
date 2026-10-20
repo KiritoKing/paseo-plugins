@@ -5,7 +5,7 @@ import type {
   PluginTimelineTransformerContribution,
 } from "@getpaseo/plugin/client";
 import { createAppearanceController } from "../client/controller";
-import { defaultAppearance } from "../shared/appearance";
+import { appearanceSchema, defaultAppearance } from "../shared/appearance";
 
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 function harness() {
@@ -246,6 +246,114 @@ test("missing public capability retains native content", async () => {
   await flush();
   assert.equal(controller.getSnapshot().status, "unavailable");
   assert.equal(h.calls.reads, 0);
+  assert.equal(h.active.size, 0);
+  await controller.dispose();
+});
+
+test("older saved appearance values retain category settings without enabling output-only mode", async () => {
+  const { activityMode: _omitted, ...previousValues } = defaultAppearance;
+  const parsed = appearanceSchema.parse(previousValues);
+  assert.equal(parsed.activityMode, "custom");
+  const h = harness();
+  h.setResult({ status: "ready", values: previousValues, revision: "old" });
+  const controller = createAppearanceController(h.client);
+  controller.start();
+  await flush();
+  assert.equal(controller.getSnapshot().status, "ready");
+  assert.deepEqual([...h.active.keys()].sort(), ["readable-messages", "readable-reasoning"]);
+  await controller.dispose();
+});
+
+test("output-only folds all tools and reasoning in both phases without changing source or prose ownership", async () => {
+  const h = harness();
+  h.setResult({
+    status: "ready",
+    values: { ...defaultAppearance, activityMode: "output-only", reasoning: false },
+    revision: "1",
+  });
+  const controller = createAppearanceController(h.client);
+  controller.start();
+  await flush();
+  assert.deepEqual([...h.active.keys()].sort(), [
+    "readable-messages",
+    "readable-reasoning",
+    "readable-tools",
+  ]);
+  for (const [id, source] of [
+    [
+      "readable-tools",
+      { type: "tool_call", detail: { type: "provider-specific" }, status: "failed" },
+    ],
+    ["readable-reasoning", { type: "reasoning", text: "Full reasoning", futureMetadata: true }],
+  ] as const) {
+    const before = structuredClone(source);
+    const transform = h.active.get(id)!.transform as (input: {
+      item: unknown;
+      phase: "streaming" | "complete";
+    }) => unknown;
+    for (const phase of ["streaming", "complete"] as const)
+      assert.deepEqual(transform({ item: source, phase }), { items: [] });
+    assert.deepEqual(source, before);
+  }
+  const message = h.active.get("readable-messages")!;
+  assert.equal(message.query.itemType, "assistant_message");
+  const present = message.transform as (input: {
+    item: unknown;
+    phase: "streaming" | "complete";
+  }) => { items: unknown[] } | undefined;
+  assert.equal(
+    present({ item: { type: "assistant_message", text: "Live output" }, phase: "streaming" }),
+    undefined,
+  );
+  assert.equal(
+    present({ item: { type: "assistant_message", text: "Final output" }, phase: "complete" })?.items
+      .length,
+    1,
+  );
+  assert.deepEqual([...h.active.values()].map((value) => value.query.itemType).sort(), [
+    "assistant_message",
+    "reasoning",
+    "tool_call",
+  ]);
+  await controller.dispose();
+});
+
+test("mode changes invalidate existing records, restore saved category settings and remain fully disableable", async () => {
+  const h = harness();
+  const controller = createAppearanceController(h.client);
+  controller.start();
+  await flush();
+  const originalReasoning = h.active.get("readable-reasoning");
+  const originalMessage = h.active.get("readable-messages");
+  h.setResult({
+    status: "ready",
+    values: { ...defaultAppearance, activityMode: "output-only" },
+    revision: "2",
+  });
+  h.event();
+  await flush();
+  assert.notEqual(h.active.get("readable-reasoning"), originalReasoning);
+  assert.equal(h.active.get("readable-messages"), originalMessage);
+  h.setResult({ status: "ready", values: defaultAppearance, revision: "3" });
+  h.event();
+  await flush();
+  assert.equal(h.active.has("readable-tools"), false);
+  const reasoning = h.active.get("readable-reasoning")!.transform as (input: {
+    item: unknown;
+    phase: "complete";
+  }) => { items: unknown[] } | undefined;
+  assert.equal(
+    reasoning({ item: { type: "reasoning", text: "Restored reasoning" }, phase: "complete" })?.items
+      .length,
+    1,
+  );
+  h.setResult({
+    status: "ready",
+    values: { ...defaultAppearance, activityMode: "output-only", enabled: false },
+    revision: "4",
+  });
+  h.event();
+  await flush();
   assert.equal(h.active.size, 0);
   await controller.dispose();
 });

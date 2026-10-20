@@ -19,7 +19,10 @@ export interface AppearanceSnapshot {
 export function createAppearanceController(client: PluginClientContext) {
   let snapshot: AppearanceSnapshot = { status: "loading", values: defaultAppearance };
   const listeners = new Set<() => void>();
-  const registrations = new Map<PresentationKind, () => void | Promise<void>>();
+  const registrations = new Map<
+    PresentationKind,
+    { mode: "readable" | "output-only"; cleanup: () => void | Promise<void> }
+  >();
   const lifetime = new AbortController();
   let disposed = false;
   let started = false;
@@ -57,7 +60,7 @@ export function createAppearanceController(client: PluginClientContext) {
     for (const listener of listeners) listener();
   };
   const clear = () => {
-    for (const cleanup of registrations.values()) remove(cleanup);
+    for (const { cleanup } of registrations.values()) remove(cleanup);
     registrations.clear();
   };
   const apply = (next: AppearanceSnapshot) => {
@@ -65,44 +68,53 @@ export function createAppearanceController(client: PluginClientContext) {
     notify(next);
     const wanted = next.status === "ready" && available && next.values.enabled;
     for (const kind of ["tools", "reasoning", "messages"] as const) {
-      if ((!wanted || !next.values[kind]) && registrations.has(kind)) {
-        remove(registrations.get(kind)!);
+      const mode =
+        kind !== "messages" && next.values.activityMode === "output-only"
+          ? "output-only"
+          : "readable";
+      const enabled = wanted && (mode === "output-only" || next.values[kind]);
+      const registration = registrations.get(kind);
+      if (registration && (!enabled || registration.mode !== mode)) {
+        remove(registration.cleanup);
         registrations.delete(kind);
       }
-      if (!wanted || !next.values[kind] || registrations.has(kind)) continue;
+      if (!enabled || registrations.has(kind)) continue;
       try {
         if (kind === "tools")
-          registrations.set(
-            kind,
-            client.addTimelineTransformer({
+          registrations.set(kind, {
+            mode,
+            cleanup: client.addTimelineTransformer({
               id: "readable-tools",
               query: { itemType: "tool_call" },
               transform({ item, phase }) {
+                // Public render-model filtering: source history is never changed.
+                if (mode === "output-only") return { items: [] };
                 const data = projectTool(item, phase);
                 return data
                   ? { items: [{ type: "plugin", kind: "readable-tool", version: 1, data }] }
                   : undefined;
               },
             }),
-          );
+          });
         if (kind === "reasoning")
-          registrations.set(
-            kind,
-            client.addTimelineTransformer({
+          registrations.set(kind, {
+            mode,
+            cleanup: client.addTimelineTransformer({
               id: "readable-reasoning",
               query: { itemType: "reasoning" },
               transform({ item, phase }) {
+                if (mode === "output-only") return { items: [] };
                 const data = projectReasoning(item, phase);
                 return data
                   ? { items: [{ type: "plugin", kind: "readable-reasoning", version: 1, data }] }
                   : undefined;
               },
             }),
-          );
+          });
         if (kind === "messages")
-          registrations.set(
-            kind,
-            client.addTimelineTransformer({
+          registrations.set(kind, {
+            mode,
+            cleanup: client.addTimelineTransformer({
               id: "readable-messages",
               query: { itemType: "assistant_message" },
               transform({ item, phase }) {
@@ -114,7 +126,7 @@ export function createAppearanceController(client: PluginClientContext) {
                   : undefined;
               },
             }),
-          );
+          });
       } catch {
         available = false;
         clear();

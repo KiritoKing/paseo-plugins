@@ -64,6 +64,8 @@ export function createAppearanceSettings(controller: AppearanceController) {
       });
     };
     const disabled = state.saving;
+    const outputOnly = state.values.activityMode === "output-only";
+    const activityDisabled = disabled || outputOnly;
     return (
       <View style={{ padding: layout.compact ? 16 : 24, gap: 24, maxWidth: 900, width: "100%" }}>
         {current.status !== "ready" ? (
@@ -95,14 +97,14 @@ export function createAppearanceSettings(controller: AppearanceController) {
             hint="默认保留原生工具分组。开启后逐条查看完整命令、输出和退出码；失败记录默认展开。"
             value={state.values.tools}
             onValueChange={(tools) => save({ tools })}
-            disabled={disabled}
+            disabled={activityDisabled}
           />
           <SettingsSwitch
             label="思考记录样式"
             hint="默认折叠，保留完整原文，可随时展开或复制。"
             value={state.values.reasoning}
             onValueChange={(reasoning) => save({ reasoning })}
-            disabled={disabled}
+            disabled={activityDisabled}
           />
           <SettingsSwitch
             label="正文排版"
@@ -113,6 +115,17 @@ export function createAppearanceSettings(controller: AppearanceController) {
           />
         </SettingsSection>
         <SettingsSection title="阅读偏好">
+          <SettingsSelect
+            label="过程记录"
+            hint="全部折叠时隐藏工具与思考记录及其标题，只保留正文输出。切回按类别设置即可查看原记录；权限提示和运行控制仍由 Paseo 显示。"
+            value={state.values.activityMode}
+            options={[
+              { label: "按类别设置", value: "custom" },
+              { label: "全部折叠（仅输出）", value: "output-only" },
+            ]}
+            onValueChange={(activityMode) => save({ activityMode })}
+            disabled={disabled}
+          />
           <SettingsSelect
             label="密度"
             value={state.values.density}
@@ -150,16 +163,16 @@ export function createAppearanceSettings(controller: AppearanceController) {
             options={[
               { label: "仅失败记录", value: "failed" },
               { label: "全部", value: "all" },
-              { label: "全部折叠", value: "none" },
+              { label: "仅保留标题", value: "none" },
             ]}
             onValueChange={(expandTools) => save({ expandTools })}
-            disabled={disabled}
+            disabled={activityDisabled}
           />
           <SettingsSwitch
             label="思考记录默认展开"
             value={state.values.expandReasoning}
             onValueChange={(expandReasoning) => save({ expandReasoning })}
-            disabled={disabled}
+            disabled={activityDisabled}
           />
           <SettingsSwitch
             label="代码自动换行"
@@ -186,43 +199,49 @@ export function createAppearanceSettings(controller: AppearanceController) {
             样式预览
           </Text>
           <Text style={text}>以下为合成示例，不会运行命令。</Text>
-          <Tool
-            {...props}
-            agentId="appearance-preview"
-            timestamp={new Date(0)}
-            item={{
-              type: "plugin",
-              kind: "readable-tool",
-              version: 1,
-              data: {
-                callId: "preview-tool",
-                name: "shell",
-                command: "npm run typecheck",
-                status: "completed",
-                exitCode: 0,
-                output: "Typecheck passed.",
-                phase: "complete",
-              },
-            }}
-          />
-          <Reasoning
-            {...props}
-            agentId="appearance-preview"
-            timestamp={new Date(0)}
-            item={{
-              type: "plugin",
-              kind: "readable-reasoning",
-              version: 1,
-              data: { text: "先检查已有实现，再验证本次改动。", phase: "complete" },
-            }}
-          />
+          {outputOnly ? (
+            <Text style={text}>工具与思考已全部折叠，正文输出继续显示。</Text>
+          ) : (
+            <>
+              <Tool
+                {...props}
+                agentId="appearance-preview"
+                timestamp={new Date(0)}
+                item={{
+                  type: "plugin",
+                  kind: "readable-tool",
+                  version: 1,
+                  data: {
+                    callId: "preview-tool",
+                    name: "shell",
+                    command: "npm run typecheck",
+                    status: "completed",
+                    exitCode: 0,
+                    output: "Typecheck passed.",
+                    phase: "complete",
+                  },
+                }}
+              />
+              <Reasoning
+                {...props}
+                agentId="appearance-preview"
+                timestamp={new Date(0)}
+                item={{
+                  type: "plugin",
+                  kind: "readable-reasoning",
+                  version: 1,
+                  data: { text: "先检查已有实现，再验证本次改动。", phase: "complete" },
+                }}
+              />
+            </>
+          )}
         </View>
         <SettingsSection
           title="主题与兼容性"
           info="在设置 → 外观中选择 Codex Light 或 Codex Dark，也可以继续使用当前主题。"
         >
           <Text style={text}>
-            同类消息使用一个呈现插件。若其他插件负责工具、思考或正文，请关闭这里对应的开关。关闭总开关后恢复原生呈现；配色可以单独使用。
+            同类消息使用一个呈现插件。若其他插件负责工具或思考，请先切回“按类别设置”，再关闭对应开关；正文可单独关闭。关闭总开关后恢复原生呈现；配色可以单独使用。
           </Text>
         </SettingsSection>
       </View>

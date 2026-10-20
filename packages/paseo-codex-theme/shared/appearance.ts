@@ -7,6 +7,7 @@ export const appearanceSchema = z
     tools: z.boolean().default(false),
     reasoning: z.boolean().default(true),
     messages: z.boolean().default(true),
+    activityMode: z.enum(["custom", "output-only"]).default("custom"),
     density: z.enum(["comfortable", "compact"]).default("comfortable"),
     fontSize: z.enum(["14", "15", "16"]).default("15"),
     readingWidth: z.enum(["normal", "wide"]).default("normal"),
