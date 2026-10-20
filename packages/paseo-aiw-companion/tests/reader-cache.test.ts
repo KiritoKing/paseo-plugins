@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
-import { patchQueryKey, retainPatchData } from "../client/reader-cache";
 import type { Reader } from "../client/model";
+import { patchQueryKey, retainPatchData } from "../client/reader-cache";
 
 const reader = (path = "a.go", snapshotId = "first"): Reader =>
   ({

@@ -1,10 +1,10 @@
-import { useEffect, useCallback, useSyncExternalStore } from "react";
 import type { PluginButtonIconProps } from "@getpaseo/plugin/client";
 import { Icon } from "@getpaseo/plugin/client/react-native";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { View } from "react-native";
-import { mountSessionControls } from "./web";
-import { SessionHistory } from "./sessions";
 import type { SessionDialogs } from "./session-dialogs";
+import { SessionHistory } from "./sessions";
+import { mountSessionControls } from "./web";
 
 export function makeSessionControls(
   dialogs: SessionDialogs,

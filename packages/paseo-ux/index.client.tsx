@@ -1,10 +1,10 @@
+import type { PluginButtonRegistration, PluginClientContext } from "@getpaseo/plugin/client";
+import { makeMediaAnchor } from "./client/anchor";
+import { MediaPanel } from "./client/panel";
+import { makeSessionControls } from "./client/session-controls";
 import { createSessionDialogs } from "./client/session-dialogs";
 import { makeSessionOpener } from "./client/session-opener";
-import { makeSessionControls } from "./client/session-controls";
-import type { PluginClientContext, PluginButtonRegistration } from "@getpaseo/plugin/client";
-import { MediaPanel } from "./client/panel";
 import { MediaSettings } from "./client/settings";
-import { makeMediaAnchor } from "./client/anchor";
 import { cleanupInlineMedia } from "./client/web";
 import { clientDiagnostics } from "./shared/contracts";
 
@@ -143,7 +143,9 @@ export default function contribute(client: PluginClientContext) {
         return;
       }
       releaseDirectory = () => void result.subscription.release();
-      result.entries.forEach((entry) => sync(entry.agent));
+      result.entries.forEach((entry) => {
+        sync(entry.agent);
+      });
       void client
         .rpc(clientDiagnostics, { event: "pills", detail: String(pills.size) })
         .catch(() => {});

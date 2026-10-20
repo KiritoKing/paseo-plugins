@@ -3,14 +3,15 @@ import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import type { PluginHandlerContext } from "@getpaseo/plugin/server";
 import type { RpcInput } from "@getpaseo/plugin";
+import type { PluginHandlerContext } from "@getpaseo/plugin/server";
 import {
-  listSessions,
-  restoreSession,
+  type listSessions,
   orderedClosed,
+  type restoreSession,
   type WorkspaceSession,
 } from "../shared/sessions";
+
 const execute = promisify(execFile);
 
 export async function loadSessions(

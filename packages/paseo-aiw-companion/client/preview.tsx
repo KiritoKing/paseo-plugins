@@ -1,10 +1,10 @@
+import type { PluginTheme } from "@getpaseo/plugin";
+import { copyText, Icon, ScrollView } from "@getpaseo/plugin/client/react-native";
 import { useEffect, useMemo, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import { copyText, Icon, ScrollView } from "@getpaseo/plugin/client/react-native";
-import type { PluginTheme } from "@getpaseo/plugin";
+import { type DiffRow, parseDiff } from "./diff-model";
 import type { FileQuery, PatchQuery, Reader, ReaderMode } from "./model";
-import { parseDiff, type DiffRow } from "./diff-model";
-import { highlightCode, languageFor, tint, tokenColor, type Segment } from "./syntax";
+import { highlightCode, languageFor, type Segment, tint, tokenColor } from "./syntax";
 
 const ROW_HEIGHT = 21;
 const FONT =
@@ -91,7 +91,9 @@ function CodeText({ row, theme, wrap }: { row: CodeRow; theme: PluginTheme; wrap
         : row.tokens.length
           ? row.tokens.map((token, index) => (
               <Text
-                key={index}
+                key={
+                  /* biome-ignore lint/suspicious/noArrayIndexKey: Token spans form an ordered, read-only sequence for this rendered line. */ index
+                }
                 style={{
                   color: tokenColor(token.classes, theme),
                   ...(token.classes.includes("comment") ? { fontStyle: "italic" as const } : {}),

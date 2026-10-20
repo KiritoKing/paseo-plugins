@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  type ChangedFile,
   changedSchema,
   changeGroupSchema,
   defaultCodeIncludes,
@@ -8,7 +9,6 @@ import {
   effectiveIncludes,
   legacyV2Includes,
   projectPreferenceSchema,
-  type ChangedFile,
 } from "../shared/contracts";
 import { filterChangeGroups, matchesFileFilter } from "../shared/file-filters";
 

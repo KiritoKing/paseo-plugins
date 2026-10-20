@@ -1,11 +1,12 @@
-import React, { Component, useCallback, useState } from "react";
-import { createRoot } from "react-dom/client";
 // This test-only host supplies the real SDK contexts a standalone screen may use.
 // Deliberately omit PluginClientStateProvider, which only workspace panels receive.
-import { PluginRpcProvider, PaseoApiProvider } from "@getpaseo/plugin/client/host";
+import { PaseoApiProvider, PluginRpcProvider } from "@getpaseo/plugin/client/host";
+import { Component, useCallback, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { makeSessionControls } from "../../client/session-controls";
-import { makeSessionOpener } from "../../client/session-opener";
 import { createSessionDialogs } from "../../client/session-dialogs";
+import { makeSessionOpener } from "../../client/session-opener";
+
 class Boundary extends Component {
   state = { error: null };
   static getDerivedStateFromError(error) {
@@ -85,9 +86,13 @@ function Fixture() {
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
       />
-      <button onClick={() => dialogs.open("fixture-workspace")}>打开会话选择</button>
-      <button onClick={() => dialogs.open("fixture-workspace", true)}>恢复最近关闭</button>
-      <button onClick={() => setHandoff({ workspaceId: "fixture-workspace" })}>
+      <button type="button" onClick={() => dialogs.open("fixture-workspace")}>
+        打开会话选择
+      </button>
+      <button type="button" onClick={() => dialogs.open("fixture-workspace", true)}>
+        恢复最近关闭
+      </button>
+      <button type="button" onClick={() => setHandoff({ workspaceId: "fixture-workspace" })}>
         迁移旧全页入口
       </button>
       <Boundary>

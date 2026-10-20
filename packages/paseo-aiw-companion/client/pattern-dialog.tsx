@@ -1,17 +1,17 @@
+import type { PluginTheme } from "@getpaseo/plugin";
 import { useSettings } from "@getpaseo/plugin/client";
 import { Modal, TextInput } from "@getpaseo/plugin/client/react-native";
 import { useEffect, useState } from "react";
 import { Text, View } from "react-native";
-import type { PluginTheme } from "@getpaseo/plugin";
 import {
+  type Catalog,
+  type ChangeGroup,
   codePatternPresets,
   defaultCodeIncludes,
   effectiveIncludes,
+  type ProjectPreference,
   patternPresets,
   preferences,
-  type Catalog,
-  type ChangeGroup,
-  type ProjectPreference,
 } from "../shared/contracts";
 import type { PatternKind } from "../shared/file-filters";
 import { matchesPatterns } from "../shared/patterns";
@@ -71,6 +71,7 @@ export function PatternDialog({
   const [saveError, setSaveError] = useState<string | null>(null);
   const styles = makeStyles(theme, compact);
   const revision = settings.status === "ready" ? settings.revision : null;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Reset the draft only when the saved settings revision changes.
   useEffect(() => {
     if (!open || settings.status !== "ready") return;
     setDraft(draftFrom(settings.values.projects[catalog.projectKey]));

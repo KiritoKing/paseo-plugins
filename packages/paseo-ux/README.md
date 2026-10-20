@@ -11,19 +11,24 @@
 - 输入框上方点击 **媒体**，在 Explorer 打开 **会话媒体**；也可用命令中心的 **Paseo UX · 会话媒体** 或 `/media`。
 - 设置 → 插件 → Paseo UX → 媒体预览增强，可切换聚合和默认显示数量。
 
+## 兼容范围与运行依赖
+
+声明的 Paseo 兼容范围为 `>=0.11.2 <0.12.0`。历史验证记录涉及 Paseo 0.11.2；这不代表整个声明范围都经过验证或得到保证。运行插件只需要 Paseo 宿主环境，不额外依赖 Git、rg、AIW CLI 或其他外部工具。
+
+`paseo plugin remove paseo-ux` 会删除该 daemon 上此插件的设置目录。升级若需要先移除再安装，或卸载后可能需要恢复设置，请先备份对应的 `plugin-settings/paseo-ux/`；重装后恢复并读回。
+
 ## 本地开发
 
-需要 Node.js 22+、npm 和 Paseo app/daemon 0.11.2。
+开发支持 Node.js 22 和 24，默认使用 Node.js 24.22.0；pnpm 固定为 10.34.7，以根目录 `package.json` 的 `packageManager` 字段为准。以下命令从 monorepo 根目录执行：
 
 ```sh
-npm ci --ignore-scripts
-npm run typecheck
-npm test
-paseo plugin install .
+pnpm --filter @chlrc/paseo-ux typecheck
+pnpm --filter @chlrc/paseo-ux test
+paseo plugin install ./packages/paseo-ux
 paseo plugin reload paseo-ux
 ```
 
-只需在对应 daemon 安装和重载插件。远端会话需要将插件安装到对应远端 daemon。本地部署不重启 daemon。
+也可先在仓库根目录运行 `pnpm install --frozen-lockfile --ignore-scripts` 和 `pnpm check`。只需在对应 daemon 安装和重载插件。远端会话需要将插件安装到对应远端 daemon。本地部署不重启 daemon。更多说明见[根目录开发指南](../../README.md#开发)，本包变更记录见[CHANGELOG](CHANGELOG.md)。
 
 ## 实现边界
 
@@ -37,7 +42,9 @@ paseo plugin reload paseo-ux
 - 媒体面板只预览已挂载的可见网格单元，大图按点击加载。单张图片上限 16 MiB。
 - 原生 iOS/Android、远端 daemon、真实聊天内的点击/缩放尚需验收。
 
-## 验收
+## 宿主交互检查清单
+
+以下步骤定义在 Paseo 宿主中检查真实插件交互的范围，不是本次工作区的验收结果声明。真实客户端截图必须来自目标 Paseo 版本和设备的实际运行；本指南不使用合成页面充当客户端截图。
 
 1. 在含多张连续图片的回复中，检查总数、默认 3 张和 `+N`。
 2. 展开、收起，确认中间的正文、工具调用和用户消息隔开图片组。
@@ -47,7 +54,3 @@ paseo plugin reload paseo-ux
 6. 关闭聊天内聚合，确认恢复原生图片，重新开启后再次聚合。
 7. 关闭一个会话，按 `Cmd+Shift+T`，确认恢复原 ID、历史和标题；重复操作应依次恢复其他关闭的会话。
 8. 按 `Ctrl+反引号`，确认只新建终端；新建菜单和“会话”入口应显示当前工作区历史，不混入其他工作区。
-
-## 已验证
-
-见 [VALIDATION.md](VALIDATION.md)。

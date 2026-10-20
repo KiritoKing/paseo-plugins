@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import test from "node:test";
-import { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import test from "node:test";
 import { hasAiwConfig } from "../server/availability";
 
 test("AIW button eligibility needs only a local manifest, with no CLI or materialization", () => {

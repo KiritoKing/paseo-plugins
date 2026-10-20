@@ -1,9 +1,9 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { assetId, readImageFile, readAsset, catalogs } from "../server/media";
+import { test } from "node:test";
+import { assetId, catalogs, readAsset, readImageFile } from "../server/media";
 
 test("media read cannot request arbitrary unlisted paths or cross-agent assets", async () => {
   const id = assetId("/tmp/private.png");

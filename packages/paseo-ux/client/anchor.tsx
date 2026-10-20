@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { useSettings, type PluginButtonIconProps } from "@getpaseo/plugin/client";
+import { type PluginButtonIconProps, useSettings } from "@getpaseo/plugin/client";
 import { Icon } from "@getpaseo/plugin/client/react-native";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { mediaSettings } from "../shared/contracts";
-import { mountInlineMedia, type InlineImage } from "./web";
 import { ImagePreview } from "./preview";
+import { type InlineImage, mountInlineMedia } from "./web";
 
 export function makeMediaAnchor(onPanel: (workspaceId: string, agentId: string) => void) {
   return function MediaAnchor(props: PluginButtonIconProps) {

@@ -1,5 +1,5 @@
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import {
   closeSync,
   existsSync,
@@ -797,7 +797,7 @@ async function searchRepository(
   const globs = include.every((pattern) =>
     pattern.split("/").every((part) => !part.includes("**") || part === "**"),
   )
-    ? include.flatMap((pattern) => ["--glob", `/${pattern.replace(/[\[\]{}\\]/g, "\\$&")}`])
+    ? include.flatMap((pattern) => ["--glob", `/${pattern.replace(/[[\]{}\\]/g, "\\$&")}`])
     : [];
   const args = [
     "--json",
@@ -883,11 +883,12 @@ async function searchRepository(
     child.stdout?.on("data", (chunk: string) => {
       if (truncated || failure) return;
       pending += chunk;
-      let end: number;
-      while ((end = pending.indexOf("\n")) !== -1 && !truncated && !failure) {
+      let end = pending.indexOf("\n");
+      while (end !== -1 && !truncated && !failure) {
         const line = pending.slice(0, end);
         pending = pending.slice(end + 1);
         consume(line);
+        end = pending.indexOf("\n");
       }
       if (truncated) pending = "";
       else if (Buffer.byteLength(pending) > 16 * 1024 * 1024) {

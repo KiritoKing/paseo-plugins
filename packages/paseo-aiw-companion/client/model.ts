@@ -1,4 +1,4 @@
-import type { ChangeGroup, ChangedFile, FileContent, Patch } from "../shared/contracts";
+import type { ChangedFile, ChangeGroup, FileContent, Patch } from "../shared/contracts";
 import type { FileLocator } from "./navigation";
 
 export type Reader = { locator: FileLocator; change?: ChangedFile; group?: ChangeGroup };

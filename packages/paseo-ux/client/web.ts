@@ -1,7 +1,7 @@
-import { Platform } from "react-native";
 import type { PluginTheme } from "@getpaseo/plugin";
+import { Platform } from "react-native";
 import { previewWindow } from "../shared/media";
-import { zoomAt, dragViewport, fittedViewport, type ImageViewport } from "../shared/viewport";
+import { dragViewport, fittedViewport, type ImageViewport, zoomAt } from "../shared/viewport";
 
 // This adapter intentionally owns all desktop/web DOM knowledge. Native clients use the media panel.
 type DomNode = {

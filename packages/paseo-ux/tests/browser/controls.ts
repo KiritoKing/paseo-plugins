@@ -1,5 +1,6 @@
 import { mountImageGestures, mountSessionControls } from "../../client/web";
 import { fittedViewport } from "../../shared/viewport";
+
 let state = { ...fittedViewport };
 let restored = 0,
   terminals = 0,

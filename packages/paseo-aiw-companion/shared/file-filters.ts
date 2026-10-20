@@ -1,8 +1,8 @@
 import {
+  type ChangedFile,
+  type ChangeGroup,
   defaultCodeIncludes,
   effectiveIncludes,
-  type ChangeGroup,
-  type ChangedFile,
   type ProjectPreference,
 } from "./contracts";
 import { matchesPatterns } from "./patterns";

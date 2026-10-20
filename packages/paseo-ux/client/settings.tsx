@@ -1,5 +1,5 @@
-import { useSettings, type PluginSurfaceProps } from "@getpaseo/plugin/client";
-import { SettingsSection, SettingsSwitch, SettingsSelect } from "@getpaseo/plugin/client/ui";
+import { type PluginSurfaceProps, useSettings } from "@getpaseo/plugin/client";
+import { SettingsSection, SettingsSelect, SettingsSwitch } from "@getpaseo/plugin/client/ui";
 import { Text, View } from "react-native";
 import { mediaSettings } from "../shared/contracts";
 

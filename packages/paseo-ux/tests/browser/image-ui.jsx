@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Modal as HostModal } from "./screen-ui";
+
 export { Icon, ScrollView, TextInput } from "./screen-ui";
 export function Modal({ children, ...props }) {
   const [testing, setTesting] = useState(true);
@@ -9,6 +10,7 @@ export function Modal({ children, ...props }) {
         <div>
           <input aria-label="预览中的输入框" defaultValue="abc" style={{ margin: 12 }} />
           <button
+            type="button"
             onClick={() => {
               for (let i = 0; i < 5; i++)
                 document.dispatchEvent(
@@ -24,7 +26,9 @@ export function Modal({ children, ...props }) {
           >
             连续右键
           </button>
-          <button onClick={() => setTesting(false)}>隐藏测试控件</button>
+          <button type="button" onClick={() => setTesting(false)}>
+            隐藏测试控件
+          </button>
         </div>
       ) : null}
       {children}

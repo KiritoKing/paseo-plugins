@@ -1,12 +1,12 @@
+import type { PluginTheme } from "@getpaseo/plugin";
 import { useRpc } from "@getpaseo/plugin/client";
 import { Icon } from "@getpaseo/plugin/client/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
-import type { PluginTheme } from "@getpaseo/plugin";
-import { treeRpc, type ChangeGroup, type ChangedFile, type Repo } from "../shared/contracts";
-import type { FileLocator } from "./navigation";
+import { type ChangedFile, type ChangeGroup, type Repo, treeRpc } from "../shared/contracts";
 import { Badge, Empty, ErrorText, makeStyles } from "./controls";
+import type { FileLocator } from "./navigation";
 
 export type Expanded = ReadonlySet<string>;
 export type Toggle = (key: string) => void;

@@ -1,4 +1,3 @@
-import React from "react";
 export const Platform = { OS: "web" };
 function properties({ testID, accessibilityRole, accessibilityLabel, style, children, ...rest }) {
   return {
@@ -25,6 +24,7 @@ export function Text({ children, numberOfLines, selectable, ...props }) {
 export function Pressable({ children, onPress, style, ...props }) {
   return (
     <button
+      type="button"
       {...properties(props)}
       onClick={onPress}
       style={{

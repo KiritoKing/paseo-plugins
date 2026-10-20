@@ -13,7 +13,7 @@ export function matchesGlob(pattern: string, path: string): boolean {
     else if (char === "?") expression += "[^/]";
     else expression += (".+^$()[]{}|\\".includes(char) ? "\\" : "") + char;
   }
-  return new RegExp(expression + "$").test(path);
+  return new RegExp(`${expression}$`).test(path);
 }
 export function matchesPatterns(
   path: string,

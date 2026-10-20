@@ -1,5 +1,5 @@
 import type { RpcOutput } from "@getpaseo/plugin";
-import { layoutRpcs, layoutValuesSchema, type WorkspaceLayout } from "../shared/layout";
+import { type layoutRpcs, layoutValuesSchema, type WorkspaceLayout } from "../shared/layout";
 
 export async function saveWorkspaceLayout(
   workspaceId: string,

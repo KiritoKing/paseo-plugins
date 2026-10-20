@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ImagePreview } from "../../client/preview";
 import { Modal } from "./screen-ui";
+
 const images = [1, 2, 3].map((i) => {
   const canvas = document.createElement("canvas");
   canvas.width = 360;
@@ -36,8 +37,11 @@ function Fixture() {
   return (
     <>
       <h1>原工作区</h1>
-      <button onClick={() => setOpen(true)}>打开图片预览</button>
+      <button type="button" onClick={() => setOpen(true)}>
+        打开图片预览
+      </button>
       <button
+        type="button"
         onClick={() => {
           setOpen(true);
           setOther(true);
@@ -58,7 +62,7 @@ function Fixture() {
       {other ? (
         <Modal title="其他弹窗" open onOpenChange={setOther}>
           <Modal.Content>
-            <button>其他弹窗按钮</button>
+            <button type="button">其他弹窗按钮</button>
           </Modal.Content>
         </Modal>
       ) : null}

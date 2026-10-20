@@ -1,6 +1,6 @@
-import { Pressable, Text, View } from "react-native";
-import { Icon } from "@getpaseo/plugin/client/react-native";
 import type { PluginTheme } from "@getpaseo/plugin";
+import { Icon } from "@getpaseo/plugin/client/react-native";
+import { Pressable, Text, View } from "react-native";
 
 export type PanelStyles = ReturnType<typeof makeStyles>;
 

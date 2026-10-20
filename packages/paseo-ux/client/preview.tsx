@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useId } from "react";
-import { Image, Text, View, Pressable } from "react-native";
-import { Modal, ScrollView, copyText, Icon, useToast } from "@getpaseo/plugin/client/react-native";
 import type { PluginHostProps } from "@getpaseo/plugin/client";
-import { mountImageGestures, mountImageNavigation, type InlineImage } from "./web";
-import { fittedViewport, zoomAt, type ImageViewport } from "../shared/viewport";
+import { copyText, Icon, Modal, ScrollView, useToast } from "@getpaseo/plugin/client/react-native";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { Image, Pressable, Text, View } from "react-native";
+import { fittedViewport, type ImageViewport, zoomAt } from "../shared/viewport";
+import { type InlineImage, mountImageGestures, mountImageNavigation } from "./web";
 
 export function ImagePreview({
   images,
@@ -21,14 +21,14 @@ export function ImagePreview({
   const [viewport, setViewport] = useState<ImageViewport>(fittedViewport);
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
-  const viewportId = "paseo-ux-preview-" + useId().replace(/[^a-zA-Z0-9-]/g, "");
+  const viewportId = `paseo-ux-preview-${useId().replace(/[^a-zA-Z0-9-]/g, "")}`;
   const zoom = viewport.zoom;
   const setZoom = (update: (zoom: number) => number) =>
     setViewport((state) => zoomAt(state, update(state.zoom) / state.zoom, { x: 0, y: 0 }));
-  const reset = () => {
+  const reset = useCallback(() => {
     viewportRef.current = fittedViewport;
     setViewport(fittedViewport);
-  };
+  }, []);
   const [failed, setFailed] = useState(false);
   const toast = useToast();
   const selectedRef = useRef(selected);
@@ -48,18 +48,23 @@ export function ImagePreview({
     setSelected(index);
     reset();
     setFailed(false);
-  }, [index]);
+  }, [index, reset]);
   const image = images[selected];
+  // Polling can replace image and resolver objects without changing the asset.
+  // Keep the latest inputs while loading only on source/URI changes or retry.
+  const loadRef = useRef({ image, resolve });
+  loadRef.current = { image, resolve };
   const [uri, setUri] = useState("");
   const [loadError, setLoadError] = useState("");
   const [retry, setRetry] = useState(0);
   useEffect(() => {
+    const { image: asset, resolve: load } = loadRef.current;
     let live = true;
-    setUri(image?.uri ?? "");
+    setUri(asset?.uri ?? "");
     setLoadError("");
     setFailed(false);
-    if (image && !image.uri && resolve) {
-      void resolve(image)
+    if (asset && !asset.uri && load) {
+      void load(asset)
         .then((value) => {
           if (live) setUri(value);
         })
@@ -92,7 +97,7 @@ export function ImagePreview({
       }),
     [viewportId],
   );
-  useEffect(() => reset(), [image?.source]);
+  useEffect(() => reset(), [image?.source, reset]);
   if (!image) return null;
   const control = (label: string, icon: string, onPress: () => void, disabled = false) => (
     <Pressable
@@ -207,6 +212,7 @@ export function ImagePreview({
         <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8 }}>
           {images.map((value, i) => (
             <Pressable
+              // biome-ignore lint/suspicious/noArrayIndexKey: Repeated sources are distinct ordered image occurrences.
               key={`${value.source}:${i}`}
               accessibilityRole="button"
               accessibilityLabel={`查看第 ${i + 1} 张图片`}

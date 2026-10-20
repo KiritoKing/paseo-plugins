@@ -1,7 +1,7 @@
 import type { PluginClientContext, PluginWorkspacePanelProps } from "@getpaseo/plugin/client";
 import { BusinessPanel, SearchPanel } from "./client/aiw";
+import { type FileLocator, requestFile } from "./client/navigation";
 import { contributeWorkspaceButtons } from "./client/workspace-buttons";
-import { requestFile, type FileLocator } from "./client/navigation";
 
 export default function contribute(client: PluginClientContext) {
   function Business(props: PluginWorkspacePanelProps) {

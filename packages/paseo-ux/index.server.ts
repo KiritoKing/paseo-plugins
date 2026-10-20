@@ -1,8 +1,8 @@
-import { listSessions, restoreSession } from "./shared/sessions";
-import { loadSessions, reopenSession, probeRestoreCli } from "./server/sessions";
 import type { PluginServerContext } from "@getpaseo/plugin/server";
-import { mediaSettings, listMedia, readMedia, clientDiagnostics } from "./shared/contracts";
-import { loadMedia, readAsset, catalogs } from "./server/media";
+import { catalogs, loadMedia, readAsset } from "./server/media";
+import { loadSessions, probeRestoreCli, reopenSession } from "./server/sessions";
+import { clientDiagnostics, listMedia, mediaSettings, readMedia } from "./shared/contracts";
+import { listSessions, restoreSession } from "./shared/sessions";
 
 export default function contribute(server: PluginServerContext) {
   server.registerSettings(mediaSettings);

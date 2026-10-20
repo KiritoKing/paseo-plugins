@@ -12,11 +12,14 @@ export function mediaKind(source: string): MediaKind | null {
   return null;
 }
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: Untrusted image sources must reject control bytes.
+const controlCharacters = /[\u0000-\u001f]/;
+
 export function safeSource(source: string): boolean {
   return (
     source.length > 0 &&
     source.length <= 24_000_000 &&
-    !/[\u0000-\u001f]/.test(source) &&
+    !controlCharacters.test(source) &&
     !/^(?:javascript|vbscript|blob):/i.test(source) &&
     (!/^[a-z][a-z\d+.-]*:/i.test(source) ||
       /^(?:https?:|file:|data:image\/(?:png|jpeg|gif|webp|avif|bmp|x-icon);base64,)/i.test(source))
@@ -41,8 +44,7 @@ export function extractMedia(text: string): MediaReference[] {
     .replace(/(`+)[^\n]*?\1/g, "");
   const result: MediaReference[] = [];
   const start = /!\[([^\]\n]*)\]\(/g;
-  let match: RegExpExecArray | null;
-  while ((match = start.exec(cleaned))) {
+  for (let match = start.exec(cleaned); match !== null; match = start.exec(cleaned)) {
     let pos = start.lastIndex;
     while (/\s/.test(cleaned[pos] ?? "") && pos < cleaned.length) pos++;
     let source = "";

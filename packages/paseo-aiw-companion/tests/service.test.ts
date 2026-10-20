@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
   chmodSync,
-  mkdtempSync,
   mkdirSync,
+  mkdtempSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -66,7 +66,7 @@ test("catalog and read-only services preserve repository identity and Git scopes
     const childBase = commit(child, "child baseline");
     git(child, ["switch", "-c", "change/test"]);
     git(child, ["mv", "src/old name.txt", "src/new name.txt"]);
-    writeFileSync(join(child, "src", "new name.txt"), "keep\n".repeat(9) + "after needle\n");
+    writeFileSync(join(child, "src", "new name.txt"), `${"keep\n".repeat(9)}after needle\n`);
     git(child, ["rm", "deleted.txt"]);
     const untrackedName = "未 跟踪.txt";
     git(child, ["config", "core.quotePath", "false"]);

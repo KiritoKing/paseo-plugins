@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { open } from "node:fs/promises";
-import { resolve, extname } from "node:path";
+import { extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { PluginHandlerContext } from "@getpaseo/plugin/server";
 import type { RpcInput } from "@getpaseo/plugin";
-import { listMedia, readMedia, type MediaAsset } from "../shared/contracts";
-import { extractMedia, collectStructuredImages, safeSource, mediaLabel } from "../shared/media";
+import type { PluginHandlerContext } from "@getpaseo/plugin/server";
+import type { listMedia, MediaAsset, readMedia } from "../shared/contracts";
+import { collectStructuredImages, extractMedia, mediaLabel, safeSource } from "../shared/media";
 
 const MIME: Record<string, string> = {
   ".png": "image/png",
@@ -64,7 +64,7 @@ export async function loadMedia(
       const id = assetId(reference.source);
       const asset: MediaAsset = {
         id,
-        source: reference.source.startsWith("data:") ? "embedded:" + id : reference.source,
+        source: reference.source.startsWith("data:") ? `embedded:${id}` : reference.source,
         label: /^(?:image|图片)$/i.test(reference.label)
           ? mediaLabel(reference.source)
           : reference.label,

@@ -3,21 +3,40 @@
   "private": true,
   "version": "0.0.0",
   "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ],
   "engines": {
-    "node": ">=22"
+    "node": "^22.0.0 || ^24.0.0",
+    "pnpm": "10.34.7"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KiritoKing/paseo-plugins.git"
   },
   "scripts": {
+    "check:env": "node scripts/check-env.mjs",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "check:style": "biome ci .",
     "check:public": "node scripts/check-public.mjs",
-    "typecheck": "npm run typecheck --workspaces",
-    "test": "npm run test --workspaces --if-present",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "typecheck": "pnpm -r typecheck",
+    "test:tools": "node --test scripts/tests/*.test.mjs",
+    "test": "pnpm -r --if-present test && pnpm run test:tools",
+    "fixtures:build": "node scripts/browser-fixtures.mjs",
+    "fixtures:serve": "node scripts/browser-fixtures.mjs --serve",
     "pack:inspect": "node scripts/check-public.mjs --pack",
-    "check": "npm run check:public && npm run typecheck && npm test && npm run pack:inspect"
+    "pack:release": "node scripts/package-artifacts.mjs --out work/packages",
+    "check": "pnpm check:env && pnpm check:style && pnpm check:public && pnpm check:boundaries && pnpm typecheck && pnpm test && pnpm fixtures:build && pnpm pack:inspect",
+    "lock:runtime": "node scripts/update-consumer-locks.mjs"
+  },
+  "packageManager": "pnpm@10.34.7",
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "22.20.5",
+    "esbuild": "0.28.2",
+    "semver": "7.8.5",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "yaml": "2.9.1"
   }
 }

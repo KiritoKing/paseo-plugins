@@ -1,4 +1,5 @@
 import { mountInlineMedia } from "../../client/web";
+
 const source =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jB1sAAAAASUVORK5CYII=";
 const frame = (number: number) =>

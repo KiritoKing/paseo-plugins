@@ -1,16 +1,16 @@
-import { refractor } from "refractor/core";
-import tsx from "refractor/tsx";
-import css from "refractor/css";
-import json from "refractor/json";
-import yaml from "refractor/yaml";
-import markdown from "refractor/markdown";
-import go from "refractor/go";
+import type { PluginTheme } from "@getpaseo/plugin";
+import type { RootContent } from "hast";
 import bash from "refractor/bash";
+import { refractor } from "refractor/core";
+import css from "refractor/css";
+import go from "refractor/go";
+import json from "refractor/json";
+import markdown from "refractor/markdown";
+import protobuf from "refractor/protobuf";
 import python from "refractor/python";
 import sql from "refractor/sql";
-import protobuf from "refractor/protobuf";
-import type { RootContent } from "hast";
-import type { PluginTheme } from "@getpaseo/plugin";
+import tsx from "refractor/tsx";
+import yaml from "refractor/yaml";
 
 for (const grammar of [tsx, css, json, yaml, markdown, go, bash, python, sql, protobuf])
   refractor.register(grammar);

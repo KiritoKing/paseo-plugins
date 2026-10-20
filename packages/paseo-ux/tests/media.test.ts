@@ -1,6 +1,6 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { extractMedia, collectStructuredImages, previewWindow, safeSource } from "../shared/media";
+import { test } from "node:test";
+import { collectStructuredImages, extractMedia, previewWindow, safeSource } from "../shared/media";
 
 test("extracts filenames with balanced parentheses and angle-bracket spaces", () => {
   const images = extractMedia('![第一张](/tmp/a(1).png)\n![第二张](</tmp/a b.png> "caption")');

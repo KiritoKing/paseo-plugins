@@ -1,0 +1,22 @@
+name: Bug report
+description: Report a reproducible plugin or development-tooling issue
+body:
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin and version
+      description: Include the plugin ID, installed revision and affected client/daemon versions.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: List the steps, expected behavior and actual behavior using synthetic data.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and evidence
+      description: Include the operating system, relevant tool versions and sanitized errors. Remove credentials, private paths and session content before posting.

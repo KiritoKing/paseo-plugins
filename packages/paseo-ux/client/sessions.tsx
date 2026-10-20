@@ -1,13 +1,13 @@
-import { useEffect, useState, useRef } from "react";
-import { useRpc } from "@getpaseo/plugin/client";
-import { Icon, ScrollView, Modal, TextInput } from "@getpaseo/plugin/client/react-native";
-import { View, Text, Pressable } from "react-native";
 import type { PluginTheme } from "@getpaseo/plugin";
+import { useRpc } from "@getpaseo/plugin/client";
+import { Icon, Modal, ScrollView, TextInput } from "@getpaseo/plugin/client/react-native";
+import { useEffect, useRef, useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import {
-  listSessions,
-  restoreSession,
-  orderedClosed,
   isClosed,
+  listSessions,
+  orderedClosed,
+  restoreSession,
   type WorkspaceSession,
 } from "../shared/sessions";
 
@@ -53,6 +53,9 @@ export function SessionHistory({
       if (generation.current === epoch) setBusy(null);
     }
   };
+  // Callback identity changes must not restart the list/recovery generation.
+  const openRef = useRef(open);
+  openRef.current = open;
   useEffect(() => {
     const epoch = ++generation.current;
     let live = true;
@@ -66,7 +69,7 @@ export function SessionHistory({
         if (!live) return;
         setSessions(result.sessions);
         setWorkspaceName(result.workspaceName);
-        if (latest) void open(undefined, epoch);
+        if (latest) void openRef.current(undefined, epoch);
       })
       .catch((cause) => {
         if (live) setError(cause instanceof Error ? cause.message : "会话列表读取失败");

@@ -1,9 +1,10 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import type { PluginHandlerContext } from "@getpaseo/plugin/server";
+import { createSessionRestorer, loadSessions } from "../server/sessions";
 import { listSessions, orderedClosed, type WorkspaceSession } from "../shared/sessions";
-import { loadSessions, createSessionRestorer } from "../server/sessions";
-import { fittedViewport, zoomAt, dragViewport } from "../shared/viewport";
+import { dragViewport, fittedViewport, zoomAt } from "../shared/viewport";
+
 const session = (id: string, changes: Partial<WorkspaceSession> = {}): WorkspaceSession => ({
   id,
   workspaceId: "w",

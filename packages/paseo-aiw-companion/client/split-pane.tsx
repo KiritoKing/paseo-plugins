@@ -1,6 +1,6 @@
-import { useRpc, useSettings } from "@getpaseo/plugin/client";
 import type { PluginTheme } from "@getpaseo/plugin";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRpc, useSettings } from "@getpaseo/plugin/client";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { PanResponder, Platform, Pressable, Text, View, type ViewStyle } from "react-native";
 import {
   DIVIDER_SIZE,
@@ -8,8 +8,8 @@ import {
   layoutRpcs,
   splitSize,
   stackLayout,
-  workspaceLayoutSchema,
   type WorkspaceLayout,
+  workspaceLayoutSchema,
 } from "../shared/layout";
 import { saveWorkspaceLayout } from "./layout-store";
 
@@ -54,6 +54,7 @@ export function SplitPane({
       active.current = false;
     };
   }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Hydrate once from the workspace snapshot for this settings revision; later updates use explicit commits.
   useEffect(() => {
     if (hydrated.current || settings.status !== "ready") return;
     hydrated.current = true;

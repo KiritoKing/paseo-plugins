@@ -1,6 +1,8 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
+
 export { TextInput } from "./screen-native";
+
 import { View } from "./screen-native";
 export function ScrollView({ children, contentContainerStyle, horizontal, style, ...props }) {
   return (
@@ -65,7 +67,9 @@ export function Modal({ title, open, onOpenChange, children }) {
   }, [open, onOpenChange]);
   if (!open) return null;
   return createPortal(
+    // biome-ignore lint/a11y/noStaticElementInteractions: Backdrop handles pointer dismissal; the dialog listener handles Escape.
     <div
+      role="presentation"
       data-testid="modal-backdrop"
       style={{
         position: "fixed",
@@ -95,7 +99,7 @@ export function Modal({ title, open, onOpenChange, children }) {
           style={{ display: "flex", justifyContent: "space-between", padding: 16, fontWeight: 600 }}
         >
           {title}
-          <button aria-label="关闭会话选择" onClick={() => onOpenChange(false)}>
+          <button type="button" aria-label="关闭会话选择" onClick={() => onOpenChange(false)}>
             ×
           </button>
         </header>

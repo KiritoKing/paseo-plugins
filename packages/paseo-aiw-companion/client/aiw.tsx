@@ -1,30 +1,30 @@
-import { useSettings, useRpc, useWorkspace } from "@getpaseo/plugin/client";
+import type { PluginTheme } from "@getpaseo/plugin";
+import type { PluginWorkspacePanelProps } from "@getpaseo/plugin/client";
+import { useRpc, useSettings, useWorkspace } from "@getpaseo/plugin/client";
 import { ScrollView, TextInput } from "@getpaseo/plugin/client/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Switch, Text, View } from "react-native";
-import type { PluginTheme } from "@getpaseo/plugin";
-import type { PluginWorkspacePanelProps } from "@getpaseo/plugin/client";
 import {
+  type ChangedFile,
+  type ChangeGroup,
   catalogRpc,
   changesRpc,
   fileRpc,
   patchRpc,
   preferences,
-  searchRpc,
-  type ChangeGroup,
-  type ChangedFile,
   type Scope,
+  searchRpc,
 } from "../shared/contracts";
-import { filterChangeGroups, matchesFileFilter, type FileFilter } from "../shared/file-filters";
-import { subscribeToFileRequests, type FileLocator } from "./navigation";
+import { type FileFilter, filterChangeGroups, matchesFileFilter } from "../shared/file-filters";
+import { Button, Empty, ErrorText, IconButton, makeStyles } from "./controls";
 import type { Reader, ReaderMode } from "./model";
-import { patchQueryKey, retainPatchData } from "./reader-cache";
-import { PreviewPane } from "./preview";
-import { ChangeTree, FileTree, changeTreeExpansionKeys, type Expanded } from "./tree";
-import { Button, IconButton, Empty, ErrorText, makeStyles } from "./controls";
+import { type FileLocator, subscribeToFileRequests } from "./navigation";
 import { PatternDialog } from "./pattern-dialog";
+import { PreviewPane } from "./preview";
+import { patchQueryKey, retainPatchData } from "./reader-cache";
 import { SplitPane } from "./split-pane";
+import { ChangeTree, changeTreeExpansionKeys, type Expanded, FileTree } from "./tree";
 
 type ViewTab = "files" | "changes";
 const POLL_MS = 20_000;
