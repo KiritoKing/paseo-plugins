@@ -8,6 +8,7 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  renameSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -272,8 +273,25 @@ export function installHooks(cwd = process.cwd()) {
     : null;
 
   if (existsSync(managedPath)) {
-    readInstalled(managedPath, worktreeRoot, effectivePath);
-    console.log(`Git hooks already installed for this worktree: ${managedPath}`);
+    const manifest = readInstalled(managedPath, worktreeRoot, effectivePath);
+    const source = join(sourceDirectory, DISPATCHER);
+    const target = join(managedPath, DISPATCHER);
+    if (fileDigest(source) !== fileDigest(target)) {
+      const dispatcherUpdate = join(managedPath, ".dispatch-update");
+      const manifestUpdate = join(managedPath, ".manifest-update");
+      writeFileSync(dispatcherUpdate, readFileSync(source), { flag: "wx", mode: 0o600 });
+      manifest.files[DISPATCHER] = fileDigest(dispatcherUpdate);
+      writeFileSync(manifestUpdate, `${JSON.stringify(manifest, null, 2)}\n`, {
+        flag: "wx",
+        mode: 0o600,
+      });
+      renameSync(dispatcherUpdate, target);
+      renameSync(manifestUpdate, join(managedPath, MANIFEST));
+      readInstalled(managedPath, worktreeRoot, effectivePath);
+      console.log(`Updated Git hooks for this worktree: ${managedPath}`);
+    } else {
+      console.log(`Git hooks already installed for this worktree: ${managedPath}`);
+    }
     return managedPath;
   }
   if (effectivePath && canonicalPath(effectivePath) === canonicalPath(managedPath)) {

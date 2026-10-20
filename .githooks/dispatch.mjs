@@ -174,9 +174,18 @@ function requireTrackedTreeClean(cwd) {
 }
 
 function runProjectCheck(command, cwd) {
+  const environment = { ...process.env };
+  if (command === "check") {
+    // Git exports repository-local variables to push hooks. The full suite
+    // creates temporary repositories, so it must discover each repo from cwd.
+    // Keep the commit check's alternate index when checking staged files.
+    for (const name of git(["rev-parse", "--local-env-vars"], cwd, "utf8").split(/\r?\n/)) {
+      if (name) delete environment[name];
+    }
+  }
   const result = spawnSync("pnpm", [command], {
     cwd,
-    env: process.env,
+    env: environment,
     stdio: "inherit",
   });
   if (result.error?.code === "ENOENT") {

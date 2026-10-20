@@ -26,6 +26,19 @@ const { appendFileSync, readFileSync } = require("node:fs");
 const args = process.argv.slice(2);
 appendFileSync(process.env.HOOK_PNPM_LOG, JSON.stringify(args) + "\\n");
 if (args.length !== 1 || !["check:commit", "check"].includes(args[0])) process.exit(64);
+if (process.env.HOOK_ENV_LOG) {
+  appendFileSync(process.env.HOOK_ENV_LOG, JSON.stringify({
+    command: args[0], gitDir: process.env.GIT_DIR, gitIndex: process.env.GIT_INDEX_FILE
+  }) + "\\n");
+}
+if (args[0] === "check" && process.env.HOOK_NESTED_REPO) {
+  const { execFileSync } = require("node:child_process");
+  const { realpathSync } = require("node:fs");
+  const actual = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+    cwd: process.env.HOOK_NESTED_REPO, encoding: "utf8"
+  }).trim();
+  if (actual !== realpathSync(process.env.HOOK_NESTED_REPO)) process.exit(67);
+}
 if (readFileSync("code.js", "utf8").includes("BAD")) process.exit(23);
 `;
 
@@ -165,7 +178,7 @@ function createFixture(t, { globalHooksPath = true } = {}) {
 function install(fixture, cwd = fixture.repo) {
   const result = run(process.execPath, [join(cwd, ".githooks", "install.mjs")], cwd, fixture.env);
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
-  assert.match(result.stdout, /Installed Git hooks|Git hooks already installed/);
+  assert.match(result.stdout, /Installed Git hooks|Updated Git hooks|Git hooks already installed/);
   const setting = gitAt(
     fixture,
     cwd,
@@ -446,6 +459,52 @@ test("keeps forwarding to the current global hooks directory after it changes", 
 
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.deepEqual(logLines(fixture.globalLog), ["new-global"]);
+});
+
+test("reinstallation upgrades only a verified owned dispatcher", (t) => {
+  const fixture = createFixture(t);
+  const managed = install(fixture);
+  const before = JSON.parse(readFileSync(join(managed, "install.json"), "utf8"));
+  const source = join(fixture.repo, ".githooks/dispatch.mjs");
+  writeFileSync(source, `${readFileSync(source, "utf8")}\n// verified upgrade fixture\n`);
+  install(fixture);
+  const after = JSON.parse(readFileSync(join(managed, "install.json"), "utf8"));
+  assert.match(readFileSync(join(managed, "dispatch.mjs"), "utf8"), /verified upgrade fixture/);
+  assert.notEqual(after.files["dispatch.mjs"], before.files["dispatch.mjs"]);
+  assert.deepEqual(after.originalHooks, before.originalHooks);
+  assert.equal(after.files["pre-commit"], before.files["pre-commit"]);
+  install(fixture);
+});
+
+test("push checks isolate nested Git repositories while inherited hooks keep their original environment", (t) => {
+  const fixture = createFixture(t);
+  const nested = join(fixture.directory, "nested");
+  mkdirSync(nested);
+  gitAt(fixture, nested, "init", "--initial-branch=main");
+  const remote = join(fixture.directory, "remote.git");
+  git(fixture, "init", "--bare", "--initial-branch=main", remote);
+  git(fixture, "remote", "add", "origin", remote);
+  const environmentLog = join(fixture.directory, "environment.jsonl");
+  const originalLog = join(fixture.directory, "inherited-git-dir");
+  writeHook(fixture.globalHooks, "pre-push", 'printf "%s" "$GIT_DIR" > "$HOOK_ORIGINAL_ENV"');
+  install(fixture);
+  const originalHead = head(fixture);
+  const gitDirectory = git(fixture, "rev-parse", "--absolute-git-dir");
+  const push = run("git", ["push", "origin", "main"], fixture.repo, {
+    ...fixture.env,
+    GIT_DIR: gitDirectory,
+    GIT_WORK_TREE: fixture.repo,
+    GIT_INDEX_FILE: join(gitDirectory, "index"),
+    HOOK_ENV_LOG: environmentLog,
+    HOOK_NESTED_REPO: nested,
+    HOOK_ORIGINAL_ENV: originalLog,
+  });
+  assert.equal(push.status, 0, `${push.stdout}\n${push.stderr}`);
+  assert.equal(readFileSync(originalLog, "utf8"), gitDirectory);
+  assert.deepEqual(logLines(environmentLog).map(JSON.parse), [{ command: "check" }]);
+  assert.equal(head(fixture), originalHead);
+  assert.equal(gitAt(fixture, nested, "config", "--bool", "core.bare"), "false");
+  assert.equal(git(fixture, "config", "user.name"), "Git Hooks Test");
 });
 
 test("a branch without .githooks still runs the persisted safety hook", (t) => {

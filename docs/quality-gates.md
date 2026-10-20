@@ -25,12 +25,14 @@ pnpm hooks:install
 
 启用 Git 的 `extensions.worktreeConfig` 前，若 common 配置存在 `core.worktree` 或 `core.bare=true`，安装器会拒绝，要求维护者先处理这些工作区敏感配置。它不会代替维护者迁移其他工作区。
 
-分发器存放在 git-dir，切换到尚无 `.githooks` 的分支仍会转发继承的安全 hook；项目命令缺失或 pnpm 不可用时明确失败。安装是幂等的，不修改全局 Git 配置。
+分发器存放在 git-dir，切换到尚无 `.githooks` 的分支仍会转发继承的安全 hook；项目命令缺失或 pnpm 不可用时明确失败。再次安装会先核验已有文件与摘要，再原子更新自己的持久分发器；未知或被改写的文件仍会拒绝。安装不修改全局 Git 配置。
 
 ## 提交与推送
 
 - **pre-commit**：拒绝同一文件既暂存又有未暂存修改，拒绝未暂存的 lint、package、lock 和 hook 配置，然后执行 `pnpm check:commit`。该命令运行环境检查、暂存文件的 Biome 检查、整个依赖图检查和类型检查。不要依赖工作区里尚未暂存的修复掩盖暂存版本的问题。
 - **pre-push**：要求 tracked 工作区与暂存区干净，然后运行完整 `pnpm check`，包括格式、lint、公开源码约束、类型、测试、浏览器构建和消费者安装验证。
+
+继承 hook 收到原始 Git 环境。pre-push 的项目完整检查会清除 `git rev-parse --local-env-vars` 列出的仓库局部变量，让临时仓库按自己的 cwd 发现身份；pre-commit 保留实际暂存索引，包括 Git 提供的临时索引。
 
 hook 不自动格式化、stash、回滚或提交文件。需要部分暂存时，先把提交内容准备成一致、可验证的工作区状态。继承的 hook 拒绝操作时，保留其原始诊断并解决问题。不要用关闭 hook 或配置空目录来跳过门禁。
 

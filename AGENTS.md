@@ -48,7 +48,9 @@ README and OVERVIEW before changing behavior.
   preserves inherited safety hooks and scopes its hook path to this worktree.
 - Commit staged, consistent files: pre-commit rejects partially staged changes
   and unstaged gate configuration, then checks style, boundaries and types.
-  Pre-push requires a clean tracked tree and runs the complete `pnpm check`.
+  Pre-push requires a clean tracked tree and runs the complete `pnpm check`
+  without inherited repository-local Git variables. Preserve the original
+  environment for inherited safety hooks and the staged index for commit checks.
 - Never bypass inherited hooks to get a commit or push through. Main requires PR
   checks on Node 22/24; local success is separate from exact-commit CI evidence.
   See `docs/quality-gates.md` and `.github/rulesets/main-quality.json`.
