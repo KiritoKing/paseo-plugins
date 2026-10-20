@@ -19,9 +19,10 @@ pnpm --filter @chlrc/paseo-ux test
 pnpm --filter @chlrc/paseo-aiw-companion typecheck
 pnpm --filter @chlrc/paseo-aiw-companion test
 pnpm --filter @chlrc/paseo-codex-theme typecheck
+pnpm --filter @chlrc/paseo-codex-theme test
 ```
 
-Codex Theme 目前没有独立测试命令。Paseo UX 的独立浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)；夹具结果不替代真实宿主中的交互检查。
+Paseo UX 的独立浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)；Codex UI 的真实组件夹具通过统一服务的 `/conversation-ui.html` 访问。夹具结果不替代真实宿主中的交互检查。
 
 完整检查由 `pnpm check` 组合，顺序如下：
 

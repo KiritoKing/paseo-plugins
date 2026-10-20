@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-10-20T14:23:52.842342+00:00",
+  "result": "passed",
+  "check": "Strict production TypeScript compile against isolated public SDK 0.12.0 declarations",
+  "packages": [
+    {
+      "name": "@getpaseo/plugin",
+      "version": "0.12.0",
+      "integrity": "sha512-LSwpGU3o6/SRAfzIIq9BA6aqEO6LRmbJTyyCRl+jWCsguL++klMpf6HBbAZJtQOlv5YuF21gjKZvLcSkngpxFg=="
+    },
+    {
+      "name": "@getpaseo/client",
+      "version": "0.12.0",
+      "integrity": "sha512-FrszuQkG73mbU5nJcaWKjW2K1mDt6k1veCa2acV9V8HphPD7BtQLPiiUnXsSUdYeP8S54duGbuYfZgaVyUvd5g=="
+    },
+    {
+      "name": "@getpaseo/protocol",
+      "version": "0.12.0",
+      "integrity": "sha512-05jivVDeG18jWTpvQZ3yETNxH/AfHpHy9CgnP7O5ZxQLUr3onJIAqaGNzv15dPnGf4fU342UHQBFAE2t2Yc7fQ=="
+    }
+  ],
+  "runtimeUpgraded": false,
+  "runtimeAcceptance": false,
+  "sourceHashes": {
+    "index.client.ts": "5aff9eea38484c43014a4adf8eac07e271dda4c00bdb5ec7cbc3514c8475579c",
+    "index.server.ts": "de6248f06e59a4658a5b23c77908336e0c35e939cc26625bb03a67b5e76489e5",
+    "client/controller.ts": "268a1016422164dbc87b2d88ff8bd316286cd57907c759d8929a5a39d4f40454",
+    "client/settings.tsx": "5dd86f7745e167fbe5916922a78586608523bcdb50c67b1c238108597deb7677",
+    "client/themes.ts": "3a035fbb04027214e01d9a74fc04442b242f5f8e6fefbe11140781965dd0a600",
+    "client/views.tsx": "f28f5d2b49e4c74f0a1fa6d7774597c9ed6cf7b3c951ad751d1b77f21224491f",
+    "shared/appearance.ts": "c356aeadfa4f3a10a472b6f29422186c9e8a67d03ec2b643ca540ca5e3260f10",
+    "shared/message-presentation.ts": "8af543af388a478b2d23f6976ed629eb27fe862bba40082c775033143f3b3915",
+    "shared/tool-presentation.ts": "571960bc260ef4f87f0e8a4382b373d60e6cba0e84116eae0826b54d52e406d7"
+  }
+}

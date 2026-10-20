@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | [Paseo UX](packages/paseo-ux/README.md) | `paseo-ux` | `>=0.11.2 <0.12.0` | 图片聚合与预览、媒体面板、工作区会话恢复 |
 | [AIW Companion](packages/paseo-aiw-companion/README.md) | `aiw-companion` | `>=0.11.1` | AIW 多仓文件树、Diff、搜索与布局 |
-| [Codex Theme](packages/paseo-codex-theme/README.md) | `paseo-codex-theme` | `>=0.11.2 <0.12.0` | Codex 风格浅色与深色主题 |
+| [Codex UI](packages/paseo-codex-theme/README.md) | `paseo-codex-theme` | `>=0.11.2` | 现有会话排版、思考与可选工具样式、外观偏好和浅深主题 |
 
 历史验证记录涉及 Paseo 0.11.2。它是一个历史验证版本，不代表声明兼容范围中的所有版本都经过验证，也不构成对未来版本的保证。各插件的运行时要求和数据访问说明见对应 README。
 
@@ -20,7 +20,7 @@ paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-aiw-companio
 paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-codex-theme
 ```
 
-安装在对应的 Paseo daemon 上。目录安装时请保留对应源码目录。安装后，Codex Theme 需要在设置 → 外观中手动选择主题；安装不会自动切换主题。
+安装在对应的 Paseo daemon 上。目录安装时请保留对应源码目录。Codex UI 的阅读偏好位于设置 → 插件 → 会话外观；配色在设置 → 外观中单独选择，安装不会自动切换主题。
 
 > **保留插件设置：** `paseo plugin remove <id>` 会删除该安装 ID 的设置目录。若升级流程需要先移除再重装，或准备卸载但希望日后恢复设置，请先备份对应 daemon 的 `plugin-settings/<id>/`，重装后再恢复并读回。迁移步骤见[迁移说明](docs/migration.md)。
 
@@ -43,15 +43,16 @@ pnpm --filter @chlrc/paseo-ux test
 pnpm --filter @chlrc/paseo-aiw-companion typecheck
 pnpm --filter @chlrc/paseo-aiw-companion test
 pnpm --filter @chlrc/paseo-codex-theme typecheck
+pnpm --filter @chlrc/paseo-codex-theme test
 ```
 
-Codex Theme 没有独立测试命令。插件由 Paseo 编译 TypeScript 入口，不需要预构建。要在本机开发时加载插件，可从仓库根目录执行 `paseo plugin install ./packages/<package-directory>`，修改后重载对应安装 ID；远端使用时须安装到相应 daemon。UX 浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)。
+插件由 Paseo 编译 TypeScript 入口，不需要预构建。要在本机开发时加载插件，可从仓库根目录执行 `paseo plugin install ./packages/<package-directory>`，修改后重载对应安装 ID；远端使用时须安装到相应 daemon。UX 浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)，Codex UI 的真实组件夹具为统一服务中的 `/conversation-ui.html`。
 
 `pnpm check` 会依次运行环境、样式、公开文件、边界、类型、测试、浏览器夹具构建和打包清单检查。开发细项、消费者安装验证与包产物说明见[贡献指南](CONTRIBUTING.md)。
 
 根目录 `pnpm-lock.yaml` 用于工作区开发和 CI。AIW npm 发布包使用自己的 `npm-shrinkwrap.json` 锁定消费者安装依赖；两份锁文件用途不同。npm 可执行文件只用于对生成的 npm 发布包做消费者安装验证：`pnpm pack:inspect`、`pnpm pack:release` 和包含 `pack:inspect` 的 `pnpm check` 会执行这一步。工作区依赖安装和检查入口仍由 pnpm 驱动。
 
-Git 源码安装 AIW Companion 时，daemon 通过 `pnpm install --prod --frozen-lockfile --ignore-scripts` 准备生产依赖，因此需要 pnpm、Git、ripgrep（`rg`）和 AIW CLI。生成的 npm 包会移除这项 Git 专用准备步骤。UX 与 Codex Theme 只依赖 Paseo 宿主运行环境。
+Git 源码安装 AIW Companion 时，daemon 通过 `pnpm install --prod --frozen-lockfile --ignore-scripts` 准备生产依赖，因此需要 pnpm、Git、ripgrep（`rg`）和 AIW CLI。生成的 npm 包会移除这项 Git 专用准备步骤。UX 与 Codex UI 只依赖 Paseo 宿主运行环境；Codex UI 随包提供固定版本的 Markdown 解析器及许可证。
 
 `pnpm pack:release` 会在 `work/packages/` 生成 `.tgz` 包供检查和消费者安装验证；它只生成文件，不会发布到 npm。
 

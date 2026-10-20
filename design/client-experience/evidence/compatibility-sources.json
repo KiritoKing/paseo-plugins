@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-20",
+  "scope": "Read-only upstream API and implementation research plus direct function probes. No new plugin runtime, upgrade or coexistence acceptance.",
+  "baseline": {
+    "appVersion": "0.11.4",
+    "cliVersion": "0.11.4",
+    "repositoryDevelopmentSdk": "0.11.2",
+    "repositoryRequirements": ">=0.11.2 <0.12.0",
+    "sourceTag": "v0.11.4",
+    "annotatedTagObject": "f55bfd50c2dabc3c03116f14e4518f6132e737fd",
+    "sourceCommit": "dc5b02f7d7c120baea380d76def8b968020d8823"
+  },
+  "sources": [
+    {
+      "path": "packages/plugin/src/client/contracts.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/plugin/src/client/contracts.ts",
+      "bytes": 10089,
+      "sha256": "7832bc2855a2cdc75a35e69b19f57fa94944a238cfe15e2f84eaa1d19131eabc"
+    },
+    {
+      "path": "packages/plugin/src/client/index.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/plugin/src/client/index.ts",
+      "bytes": 2385,
+      "sha256": "4a938cf0b7774c256cbb21eb19a9adee5bd66e3037dc34d228dc90deef8c9ca9"
+    },
+    {
+      "path": "packages/app/src/plugins/registry.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/registry.ts",
+      "bytes": 7778,
+      "sha256": "525d144a6f77cd40c6afe4a42614bf1f9befdb14661b9e44cf078544cddc7de9"
+    },
+    {
+      "path": "packages/app/src/plugins/evaluate.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/evaluate.ts",
+      "bytes": 21322,
+      "sha256": "0d387075682412a4dee30cfe5c826d16cce12e69761657cdb9fb00c23efbf56d"
+    },
+    {
+      "path": "packages/app/src/plugins/timeline/model.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/timeline/model.ts",
+      "bytes": 4065,
+      "sha256": "68d3acb537f929ef0dfab02aa91b46236a4b70dce9cad915638871e1d895604c"
+    },
+    {
+      "path": "packages/app/src/plugins/timeline/model.test.ts",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/timeline/model.test.ts",
+      "bytes": 5782,
+      "sha256": "b633422a0aab7e93766cd7139c9a7bb2627f93450864ce9328f5f3d0d350ec51"
+    },
+    {
+      "path": "packages/app/src/plugins/timeline/view.tsx",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/timeline/view.tsx",
+      "bytes": 3731,
+      "sha256": "2e6e894d708308abb0177303c4af37a2526f228952df5ef8717d2b940b394363"
+    },
+    {
+      "path": "packages/app/src/plugins/timeline/view.test.tsx",
+      "url": "https://github.com/getpaseo/paseo/blob/dc5b02f7d7c120baea380d76def8b968020d8823/packages/app/src/plugins/timeline/view.test.tsx",
+      "bytes": 11713,
+      "sha256": "9f6b739c82fc2dab17c2255d72a67f1653a3531dfe7b47425f96c18f3c9ac920"
+    },
+    {
+      "document": "v0114-reference.md",
+      "url": "https://raw.githubusercontent.com/getpaseo/paseo/dc5b02f7d7c120baea380d76def8b968020d8823/public-docs/plugins/reference.md",
+      "ref": "dc5b02f7d7c120baea380d76def8b968020d8823",
+      "bytes": 132293,
+      "sha256": "e18c9cd32ddbf757f6bad74ec8e5920274d79191372e083fade21921295338ec",
+      "retrievedAt": "2026-10-20T12:20:04.411473+00:00"
+    },
+    {
+      "document": "current-source-reference.md",
+      "url": "https://raw.githubusercontent.com/getpaseo/paseo/main/public-docs/plugins/reference.md",
+      "ref": "main snapshot",
+      "bytes": 137166,
+      "sha256": "fb7d478188523f39947d12db291d5070a060fdcf228a26a9380c48b41fccf100",
+      "retrievedAt": "2026-10-20T12:22:07.603571+00:00"
+    },
+    {
+      "document": "current-publishing.md",
+      "url": "https://paseo.sh/docs/plugins/publishing.md",
+      "ref": "deployed snapshot",
+      "bytes": 12793,
+      "sha256": "e80920a61c052b818eff275b39e007f54142868a1db64b0225af6906ec1d3fae",
+      "retrievedAt": "2026-10-20T12:20:06.704415+00:00"
+    }
+  ],
+  "sourceFunctionProbe": {
+    "sourceCommit": "dc5b02f7d7c120baea380d76def8b968020d8823",
+    "sourcePath": "packages/app/src/plugins/timeline/model.ts",
+    "nodeVersion": "v24.22.0",
+    "executedAt": "2026-10-20T12:24:41.308Z",
+    "scope": "Direct source-function probe only; no Paseo client integration or coexistence acceptance.",
+    "cases": [
+      {
+        "id": "unclaimed-source-returns-undefined",
+        "status": "passed"
+      },
+      {
+        "id": "undefined-allows-next-transformer",
+        "status": "passed"
+      },
+      {
+        "id": "empty-replacement-claims-source-and-stops",
+        "status": "passed"
+      },
+      {
+        "id": "throw-skips-to-next-transformer",
+        "status": "passed"
+      },
+      {
+        "id": "invalid-json-skips-to-next-transformer",
+        "status": "passed"
+      }
+    ]
+  },
+  "notVerified": [
+    "Live daemon version in this compatibility pass",
+    "New plugin execution",
+    "App and daemon upgrades",
+    "Any third-party plugin coexistence combination",
+    "Native, web or mobile interaction acceptance"
+  ]
+}

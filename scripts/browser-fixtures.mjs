@@ -1,6 +1,7 @@
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir, realpath, stat } from "node:fs/promises";
 import { createServer } from "node:http";
+import { createRequire } from "node:module";
 import { dirname, extname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
@@ -23,20 +24,50 @@ const fixtures = [
     native: "screen-native.jsx",
     ui: "image-ui.jsx",
   },
+  {
+    name: "conversation-ui",
+    directory: "packages/paseo-codex-theme/tests/browser",
+    entry: "app.tsx",
+    nativeModule: "react-native-web",
+    host: "host.tsx",
+  },
 ];
 
 await mkdir(output, { recursive: true });
 for (const fixture of fixtures) {
-  await copyFile(resolve(input, `${fixture.name}.html`), resolve(output, `${fixture.name}.html`));
+  const source = fixture.directory ? resolve(root, fixture.directory) : input;
+  const fixtureRequire = createRequire(resolve(source, fixture.entry));
+  await copyFile(resolve(source, `${fixture.name}.html`), resolve(output, `${fixture.name}.html`));
   await build({
-    entryPoints: [resolve(input, fixture.entry)],
+    entryPoints: [resolve(source, fixture.entry)],
     outfile: resolve(output, `${fixture.name}.js`),
     bundle: true,
     platform: "browser",
     alias: {
-      "react-native": resolve(input, fixture.native),
-      ...(fixture.ui ? { "@getpaseo/plugin/client/react-native": resolve(input, fixture.ui) } : {}),
+      "react-native": fixture.nativeModule
+        ? fixtureRequire.resolve(fixture.nativeModule)
+        : resolve(source, fixture.native),
+      ...(fixture.ui
+        ? { "@getpaseo/plugin/client/react-native": resolve(source, fixture.ui) }
+        : {}),
     },
+    ...(fixture.host
+      ? {
+          jsx: "automatic",
+          define: { "process.env.NODE_ENV": '"development"', __DEV__: "true" },
+          plugins: [
+            {
+              name: "public-host-fixture",
+              setup(builder) {
+                builder.onResolve(
+                  { filter: /^@getpaseo\/plugin\/client(?:\/react-native|\/ui)?$/ },
+                  () => ({ path: resolve(source, fixture.host) }),
+                );
+              },
+            },
+          ],
+        }
+      : {}),
   });
 }
 const controls = resolve(output, "h/fixture-host/workspace/fixture-workspace/index.html");

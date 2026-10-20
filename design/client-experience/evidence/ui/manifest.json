@@ -1,0 +1,64 @@
+{
+  "recordedAt": "2026-10-20T14:37:49.884997+00:00",
+  "kind": "Actual React Native Web component fixture with synthetic data, not a native-client screenshot",
+  "fixture": "/conversation-ui.html",
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 900,
+      "appearance": "light"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "appearance": "dark"
+    }
+  ],
+  "verified": [
+    "default native tool ownership and completed prose ownership",
+    "opt-in shell record rendering",
+    "heading levels and accessible link names",
+    "automatic failed-tool expansion",
+    "no document horizontal overflow at 390 CSS pixels",
+    "copy success and persistent failure feedback through the fixture host adapter",
+    "copy does not change disclosure state",
+    "settings save failure retains the prior value",
+    "global disable releases custom tool, reasoning and prose renderers",
+    "no warning or error logs after the final fixture reload"
+  ],
+  "limits": [
+    "Clipboard and settings host APIs are simulated in the fixture.",
+    "Native client, mobile device, multi-host and SDK 0.12 runtime acceptance remain separate.",
+    "The rejected native capture showed a different page and was removed."
+  ],
+  "images": [
+    {
+      "file": "narrow-copy-error.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 1385,
+      "sha256": "77cc6dfb83e8594d175682477d291203aaa9b2ef7eabe0a766f8c9bf0d6618ae"
+    },
+    {
+      "file": "narrow-dark-error.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 1385,
+      "sha256": "8f0c5b774b1ba572758928ee661ee1b2f23fd549e54df6bead3b7e5de2e82ae1"
+    },
+    {
+      "file": "narrow-settings-save-error.jpg",
+      "format": "JPEG",
+      "width": 390,
+      "height": 1363,
+      "sha256": "25ba2272ffb99fdee115a54ba4bceeef8fc2f071cd08850c8731860d72a54b1d"
+    },
+    {
+      "file": "wide-light.jpg",
+      "format": "JPEG",
+      "width": 1280,
+      "height": 900,
+      "sha256": "9a23607cd59c2006fe3c28b2f448df74bbf8da9dc9a034fe67e010bde6a47ee0"
+    }
+  ]
+}

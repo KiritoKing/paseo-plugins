@@ -11,19 +11,29 @@
     "client/",
     "server/",
     "shared/",
+    "assets/",
     "LICENSE",
     "README.md",
     "CHANGELOG.md"
   ],
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "build:markdown": "node tests/bundle-markdown.mjs"
   },
   "devDependencies": {
     "@getpaseo/plugin": "0.11.2",
-    "@types/react": "~19.2.0"
+    "@types/react": "~19.2.0",
+    "lucide-react": "1.60.0",
+    "marked": "18.1.1",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-web": "0.21.4",
+    "zod": "4.4.3"
   },
   "license": "MIT",
-  "description": "Codex 风格的浅色与深色主题：中性灰阶、柔和面板和黑白强调色。",
+  "description": "优化 Paseo 现有会话的阅读、工具与思考记录，提供字号、密度设置和浅深主题。",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KiritoKing/paseo-plugins.git",
