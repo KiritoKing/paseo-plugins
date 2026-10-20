@@ -19,6 +19,7 @@ import {
   readMedia,
 } from "../shared/contracts";
 import { ImagePreview } from "./preview";
+import { createRefreshCoordinator, type RefreshCoordinator } from "./refresh-coordinator";
 
 type PanelProps = PluginAgentPanelProps & {
   playAudio?: (source: { base64: string; mimeType: string }) => Promise<void>;
@@ -77,8 +78,6 @@ function Attachments(props: PanelProps & { features: FeatureValues }) {
   const epoch = useRef("");
   const oldest = useRef<MediaCursor | null>(null);
   const generation = useRef(0);
-  const historyRevision = useRef(0);
-  const inFlight = useRef(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -108,27 +107,24 @@ function Attachments(props: PanelProps & { features: FeatureValues }) {
   };
   const mergeRef = useRef(mergePage);
   mergeRef.current = mergePage;
+  const lifecycle = useMemo(() => ({}), [agentId, host.id, list, paseo]);
+  const coordinatorRef = useRef<{
+    lifecycle: typeof lifecycle;
+    coordinator: RefreshCoordinator<MediaCursor>;
+  } | null>(null);
   useEffect(() => {
     const current = ++generation.current;
     let disposed = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const refresh = async () => {
-      if (disposed || inFlight.current) return;
-      const revision = historyRevision.current;
-      inFlight.current = true;
-      try {
-        const page = await list({ agentId });
-        if (!disposed && revision === historyRevision.current) mergeRef.current(page, false);
-      } catch (cause) {
-        if (!disposed && revision === historyRevision.current) setError(message(cause));
-      } finally {
-        if (!disposed && revision === historyRevision.current) {
-          inFlight.current = false;
-          setLoading(false);
-        }
-      }
-    };
-    inFlight.current = false;
+    const coordinator = createRefreshCoordinator<Awaited<ReturnType<typeof list>>, MediaCursor>({
+      load: (kind, cursor) => list({ agentId, ...(kind === "older" && cursor ? { cursor } : {}) }),
+      onPage: (page, kind) => mergeRef.current(page, kind === "older"),
+      onError: (cause) => setError(message(cause)),
+      onSettled: () => setLoading(false),
+    });
+    const entry = { lifecycle, coordinator };
+    coordinatorRef.current = entry;
+    coordinator.activate(() => !disposed && current === generation.current);
     epoch.current = "";
     oldest.current = null;
     setAssets([]);
@@ -138,7 +134,7 @@ function Attachments(props: PanelProps & { features: FeatureValues }) {
     setPreview(null);
     setSearch("");
     setKind("all");
-    void refresh();
+    void coordinator.request();
     const stop = paseo.agents.ref(agentId).timeline.subscribe((event) => {
       if (disposed || current !== generation.current) return;
       if (event.event.type === "error") {
@@ -146,8 +142,7 @@ function Attachments(props: PanelProps & { features: FeatureValues }) {
         return;
       }
       if (event.event.type === "replacement") {
-        historyRevision.current++;
-        inFlight.current = false;
+        coordinator.invalidate();
         epoch.current = "";
         oldest.current = null;
         setAssets([]);
@@ -157,39 +152,28 @@ function Attachments(props: PanelProps & { features: FeatureValues }) {
       }
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
-        void refresh();
+        void coordinator.request();
       }, 600);
     });
     void stop.ready.catch(() => {
-      if (!disposed) setError("Live attachment updates are unavailable. Refresh to retry.");
+      if (!disposed && current === generation.current)
+        setError("Live attachment updates are unavailable. Refresh to retry.");
     });
     return () => {
       disposed = true;
       generation.current++;
+      coordinator.dispose();
+      if (coordinatorRef.current === entry) coordinatorRef.current = null;
       stop();
       if (timer) clearTimeout(timer);
     };
-  }, [agentId, host.id, list, paseo]);
+  }, [agentId, host.id, lifecycle, list, paseo]);
 
   const reload = async (older = false) => {
-    if (inFlight.current) return;
-    const current = generation.current;
-    const revision = historyRevision.current;
-    inFlight.current = true;
+    const entry = coordinatorRef.current;
+    if (!entry || entry.lifecycle !== lifecycle) return;
     setLoading(true);
-    try {
-      const page = await list({ agentId, ...(older && cursor ? { cursor } : {}) });
-      if (current === generation.current && revision === historyRevision.current)
-        mergePage(page, older);
-    } catch (cause) {
-      if (current === generation.current && revision === historyRevision.current)
-        setError(message(cause));
-    } finally {
-      if (current === generation.current && revision === historyRevision.current) {
-        inFlight.current = false;
-        setLoading(false);
-      }
-    }
+    await entry.coordinator.request(older ? "older" : "head", older ? cursor : null);
   };
   const filtered = useMemo(
     () =>

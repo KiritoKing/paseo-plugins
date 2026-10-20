@@ -6,7 +6,14 @@ import { ImageGallery } from "../../client/gallery";
 import { MediaPanel } from "../../client/panel";
 import { MediaSettings } from "../../client/settings";
 import contribute from "../../index.client";
-import { addFirstAttachment, failHistory, fakePaseo, rpc, sampleImage } from "./essentials-host";
+import {
+  addFirstAttachment,
+  delayNextHistory,
+  failHistory,
+  fakePaseo,
+  rpc,
+  sampleImage,
+} from "./essentials-host";
 
 const colors = {
   surface0: "#fff",
@@ -112,6 +119,9 @@ function App() {
         </button>
         <button type="button" onClick={failHistory}>
           Fail next history request
+        </button>
+        <button type="button" onClick={() => delayNextHistory(agentId)}>
+          Delay next history response
         </button>
       </nav>
       <aside aria-label="Registration state">

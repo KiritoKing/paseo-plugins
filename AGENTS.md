@@ -46,8 +46,9 @@ README and OVERVIEW before changing behavior.
 
 - Run `pnpm hooks:install` explicitly after dependency installation. The installer
   preserves inherited safety hooks and scopes its hook path to this worktree.
-- Commit staged, consistent files: pre-commit rejects partially staged changes
-  and unstaged gate configuration, then checks style, boundaries and types.
+- Commit staged, consistent files: pre-commit rejects all unstaged changes and
+  non-ignored untracked inputs before checking style, boundaries and types.
+  Tree-wide checks must not borrow sibling files missing from the staged snapshot.
   Pre-push requires a clean tracked tree and runs the complete `pnpm check`
   without inherited repository-local Git variables. Preserve the original
   environment for inherited safety hooks and the staged index for commit checks.

@@ -19,5 +19,6 @@ pnpm fixtures:serve
 4. 切换 Empty：自动 pill 应隐藏；Add first attachment 后应显示。Older attachments 的最新页没有附件，较早页面有附件，pill 仍应显示，面板可加载较早附件。
 5. Fail next history request 后刷新，出现错误和重试入口；已发现附件的 pill 不应被误隐藏。
 6. gallery 检查默认 3/5 张、展开/收起与重复资源键；关闭聚合后手工渲染夹具不代表宿主仍有 renderer 注册。
+7. 刷新页面后切换 Empty，点击 Delay next history response，再点击面板的 Refresh attachments，并在 600ms 内点击 Add first attachment。旧请求在 1200ms 后返回空页；面板应自动继续请求并显示 6 个合成附件，无需手动再次刷新。
 
 夹具截图只可用作开发证据，不可冒充市场要求的实际 Paseo 界面截图。原生 iOS/Android 的安全区域、系统返回、旋转、焦点和真实触控仍需设备验收。当前证据见 [VALIDATION.md](../../VALIDATION.md)。

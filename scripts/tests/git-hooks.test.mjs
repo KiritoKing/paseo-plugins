@@ -316,7 +316,6 @@ test("good code commits and bad code fails without moving HEAD", (t) => {
   const fixture = createFixture(t);
   install(fixture);
 
-  writeFileSync(join(fixture.repo, "other.js"), 'export const other = "unstaged but unrelated";\n');
   writeFileSync(join(fixture.repo, "code.js"), 'export const value = "still safe";\n');
   git(fixture, "add", "code.js");
   const beforeGoodCommit = head(fixture);
@@ -325,7 +324,7 @@ test("good code commits and bad code fails without moving HEAD", (t) => {
   assert.notEqual(head(fixture), beforeGoodCommit);
   assert.equal(
     readFileSync(join(fixture.repo, "other.js"), "utf8"),
-    'export const other = "unstaged but unrelated";\n',
+    'export const other = "safe";\n',
   );
 
   writeFileSync(join(fixture.repo, "code.js"), 'export const value = "BAD";\n');
@@ -338,6 +337,108 @@ test("good code commits and bad code fails without moving HEAD", (t) => {
     logLines(fixture.pnpmLog),
     [["check:commit"], ["check:commit"]].map(JSON.stringify),
   );
+});
+
+function assertWorkingTreeTypechecks(fixture) {
+  const result = run(
+    process.execPath,
+    [join(repositoryRoot, "node_modules/typescript/bin/tsc"), "--project", "tsconfig.json"],
+    fixture.repo,
+    fixture.env,
+  );
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+}
+
+function writeTypecheckConfig(fixture) {
+  writeFileSync(
+    join(fixture.repo, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: { noEmit: true, strict: true, target: "ES2022", types: [], lib: ["ES2022"] },
+      include: ["*.ts"],
+    }),
+  );
+}
+
+test("rejects an untracked import even when real TypeScript accepts the working tree", (t) => {
+  const fixture = createFixture(t);
+  writeTypecheckConfig(fixture);
+  writeFileSync(
+    join(fixture.repo, "code.ts"),
+    'import { answer } from "./dependency"; export const value: number = answer;\n',
+  );
+  writeFileSync(join(fixture.repo, "dependency.ts"), "export const answer = 42;\n");
+  git(fixture, "add", "code.ts", "tsconfig.json");
+  install(fixture);
+  assertWorkingTreeTypechecks(fixture);
+  const before = head(fixture);
+  const rejected = run(
+    "git",
+    ["commit", "-m", "missing imported source"],
+    fixture.repo,
+    fixture.env,
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(
+    `${rejected.stdout}\n${rejected.stderr}`,
+    /untracked files outside the staged snapshot.*dependency\.ts/,
+  );
+  assert.equal(head(fixture), before);
+  assert.deepEqual(logLines(fixture.pnpmLog), []);
+  assert.equal(
+    readFileSync(join(fixture.repo, "dependency.ts"), "utf8"),
+    "export const answer = 42;\n",
+  );
+  git(fixture, "add", "dependency.ts");
+  const accepted = run(
+    "git",
+    ["commit", "-m", "include imported source"],
+    fixture.repo,
+    fixture.env,
+  );
+  assert.equal(accepted.status, 0, `${accepted.stdout}\n${accepted.stderr}`);
+  assert.equal(git(fixture, "show", "HEAD:dependency.ts"), "export const answer = 42;");
+});
+
+test("rejects an unstaged compensating type change without modifying that file", (t) => {
+  const fixture = createFixture(t);
+  writeTypecheckConfig(fixture);
+  writeFileSync(
+    join(fixture.repo, "code.ts"),
+    'import { answer } from "./dependency"; export const value: string = answer;\n',
+  );
+  writeFileSync(join(fixture.repo, "dependency.ts"), 'export const answer = "old";\n');
+  git(fixture, "add", "code.ts", "dependency.ts", "tsconfig.json");
+  git(fixture, "commit", "-m", "typed baseline");
+  install(fixture);
+  writeFileSync(
+    join(fixture.repo, "code.ts"),
+    'import { answer } from "./dependency"; export const value: number = answer;\n',
+  );
+  git(fixture, "add", "code.ts");
+  writeFileSync(join(fixture.repo, "dependency.ts"), "export const answer = 42;\n");
+  assertWorkingTreeTypechecks(fixture);
+  const before = head(fixture);
+  const rejected = run(
+    "git",
+    ["commit", "-m", "unstaged type compensation"],
+    fixture.repo,
+    fixture.env,
+  );
+  assert.notEqual(rejected.status, 0);
+  assert.match(
+    `${rejected.stdout}\n${rejected.stderr}`,
+    /unstaged files outside the staged snapshot.*dependency\.ts/,
+  );
+  assert.equal(head(fixture), before);
+  assert.equal(git(fixture, "show", ":dependency.ts"), 'export const answer = "old";');
+  assert.equal(
+    readFileSync(join(fixture.repo, "dependency.ts"), "utf8"),
+    "export const answer = 42;\n",
+  );
+  assert.deepEqual(logLines(fixture.pnpmLog), []);
+  git(fixture, "add", "dependency.ts");
+  const accepted = run("git", ["commit", "-m", "stage the type fix"], fixture.repo, fixture.env);
+  assert.equal(accepted.status, 0, `${accepted.stdout}\n${accepted.stderr}`);
 });
 
 test("rejects partially staged bad code even when the worktree copy is good", (t) => {

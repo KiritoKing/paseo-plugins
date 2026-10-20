@@ -159,6 +159,18 @@ function requireCommitTreeMatchesIndex(cwd) {
       `lint, package, lock, or hook configuration has unstaged changes: ${names.join(", ")}`,
     );
   }
+  // Boundary and type checks read the whole tree. An unstaged sibling or an
+  // untracked import must not make an incomplete staged snapshot look valid.
+  if (unstaged.length > 0) {
+    throw new Error(
+      `working tree has unstaged files outside the staged snapshot: ${unstaged.map(displayPath).join(", ")}`,
+    );
+  }
+  if (untracked.length > 0) {
+    throw new Error(
+      `working tree has untracked files outside the staged snapshot: ${untracked.map(displayPath).join(", ")}`,
+    );
+  }
 }
 
 function requireTrackedTreeClean(cwd) {

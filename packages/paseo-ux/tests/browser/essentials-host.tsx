@@ -37,6 +37,7 @@ const timelineObservers = new Set<(value: unknown) => void>();
 let revision = 1;
 let saveError: string | null = null;
 let failNext = false;
+let delayedAgent: string | undefined;
 let values = featureValuesSchema.parse({});
 let snapshot = makeSnapshot();
 function emit() {
@@ -318,6 +319,9 @@ export function addFirstAttachment() {
 export function failHistory() {
   failNext = true;
 }
+export function delayNextHistory(agentId: string) {
+  delayedAgent = agentId;
+}
 export const fakePaseo = {
   observeEvents() {
     return {
@@ -377,12 +381,17 @@ export async function rpc(contract: { name: string }, raw: unknown): Promise<unk
     }
     const empty = input.agentId === "empty" && !emptyHasMedia;
     const firstOlder = input.agentId === "older" && !input.cursor;
-    return {
+    const page = {
       assets: empty || firstOlder ? [] : assets,
       hasOlder: firstOlder,
       cursor: firstOlder ? { epoch: "demo", seq: 4 } : null,
       epoch: "demo",
     };
+    if (delayedAgent === input.agentId) {
+      delayedAgent = undefined;
+      await new Promise((resolve) => setTimeout(resolve, 1_200));
+    }
+    return page;
   }
   if (contract.name === "media.read" || contract.name === "media.resolve")
     return input.assetId === "audio"
