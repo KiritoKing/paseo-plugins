@@ -1,8 +1,8 @@
 {
   "id": "paseo-ux",
-  "name": "Paseo UX",
-  "description": "连续图片聚合、手势预览、当前工作区会话历史与关闭会话恢复。",
+  "name": "Paseo Essentials",
+  "description": "Conversation attachments, image viewing, and everyday session tools.",
   "requirements": {
-    "paseo": ">=0.11.2 <0.12.0"
+    "paseo": ">=0.11.2"
   }
 }

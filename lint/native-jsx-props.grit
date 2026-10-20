@@ -1,0 +1,10 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+JsxAttribute(name = $name) as $attribute where {
+  $name <: r"^(?:onClick|onWheel|onKeyDown|onKeyUp|className|tabIndex|dangerouslySetInnerHTML)$",
+  register_diagnostic(
+    span = $attribute,
+    message = "Native client JSX must not use browser-only element props."
+  )
+}

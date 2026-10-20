@@ -8,6 +8,7 @@
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
+pnpm hooks:install
 pnpm check
 ```
 
@@ -21,7 +22,7 @@ pnpm --filter @chlrc/paseo-aiw-companion test
 pnpm --filter @chlrc/paseo-codex-theme typecheck
 ```
 
-Codex Theme 目前没有独立测试命令。Paseo UX 的独立浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)；夹具结果不替代真实宿主中的交互检查。
+Codex Theme 目前没有独立测试命令。Paseo Essentials 的独立浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)；夹具结果不替代真实宿主中的交互检查。
 
 完整检查由 `pnpm check` 组合，顺序如下：
 
@@ -33,7 +34,7 @@ Codex Theme 目前没有独立测试命令。Paseo UX 的独立浏览器夹具�
 | `pnpm check:boundaries` | 包与源码边界 |
 | `pnpm typecheck` | 各包类型检查 |
 | `pnpm test` | 各包现有测试与脚本测试 |
-| `pnpm fixtures:build` | 构建 UX 浏览器夹具 |
+| `pnpm fixtures:build` | 构建 Essentials 浏览器夹具 |
 | `pnpm pack:inspect` | 检查临时 npm 包的文件、运行入口和消费者安装 |
 
 只需单独调试浏览器页面时，可在根目录运行 `pnpm fixtures:build` 和 `pnpm fixtures:serve`。服务默认监听 `127.0.0.1:8769`。
@@ -42,7 +43,7 @@ Codex Theme 目前没有独立测试命令。Paseo UX 的独立浏览器夹具�
 
 根目录 `pnpm-lock.yaml` 服务于工作区开发和 CI。AIW npm 发布包使用包内的 `npm-shrinkwrap.json` 锁定消费者安装所用的依赖；两者用途不同。工作区依赖安装与检查入口由 pnpm 驱动。npm 可执行文件只用于对生成的 npm 发布包执行消费者安装验证：`pnpm pack:inspect`、`pnpm pack:release` 和包含 `pack:inspect` 的 `pnpm check` 会运行此验证，因此执行这些命令时需要本机可用 `npm`。
 
-AIW Git 源码安装的准备步骤为 `pnpm install --prod --frozen-lockfile --ignore-scripts`，它在安装插件的 daemon 上执行，因此该 daemon 需要 pnpm。AIW Companion 还需要 Git、ripgrep（`rg`）与 AIW CLI。npm 发布包会移除 Git 源码安装专用的准备步骤；UX 和 Codex Theme 只依赖 Paseo 宿主环境。
+AIW Git 源码安装的准备步骤为 `pnpm install --prod --frozen-lockfile --ignore-scripts`，它在安装插件的 daemon 上执行，因此该 daemon 需要 pnpm。AIW Companion 还需要 Git、ripgrep（`rg`）与 AIW CLI。npm 发布包会移除 Git 源码安装专用的准备步骤；Essentials 和 Codex Theme 只依赖 Paseo 宿主环境。
 
 有意调整 AIW 的依赖或版本后，运行 `pnpm lock:runtime` 更新消费者锁，再运行 `pnpm check`。脚本在临时目录保留原锁的已有解析结果，明确使用公共 npm registry，检查来源后才写回。不要把其他机器的 registry 配置或依赖目录复制进仓库。
 
@@ -50,9 +51,13 @@ AIW Git 源码安装的准备步骤为 `pnpm install --prod --frozen-lockfile --
 
 `pnpm format` 使用 Biome 统一 JS、TS、TSX 和 JSON 格式，`pnpm check:style` 只读检查。React Hooks 的缺失依赖仍作为错误；允许通过额外依赖表达刷新、重试和版本切换。必要的 revision 键或只读 token 序列例外须在对应行说明原因。非空断言沿用 TypeScript 的语言能力，由严格类型检查和行为测试约束，不另外作为通用风格告警。
 
+## 原生边界与 Git 门禁
+
+本轮发现的公共 API、原生 UI 与禁止宿主补丁约束由根 Biome 配置、`lint/` Grit 规则及真实 Biome 正反例测试维护。跨文件的依赖图与运行时打包边界继续使用已有 `check:boundaries`，不重复维护 DOM/JSX 语法扫描器。规则的作用域、保留已有 hook 的安装方式、部分暂存限制及 CI 必需状态见[质量门禁](docs/quality-gates.md)。
+
 ## 版本和变更记录
 
-三个插件分别维护版本号和 CHANGELOG。修改插件时更新受影响包的变更记录：[Paseo UX](packages/paseo-ux/CHANGELOG.md)、[AIW Companion](packages/paseo-aiw-companion/CHANGELOG.md)、[Codex Theme](packages/paseo-codex-theme/CHANGELOG.md)。共享工程调整按实际影响分别记录。尚未发布的工程调整记在 `Unreleased`，当前版本条目只概述仓库元数据所对应的能力，不虚构发行日期或发布状态。
+三个插件分别维护版本号和 CHANGELOG。修改插件时更新受影响包的变更记录：[Paseo Essentials](packages/paseo-ux/CHANGELOG.md)、[AIW Companion](packages/paseo-aiw-companion/CHANGELOG.md)、[Codex Theme](packages/paseo-codex-theme/CHANGELOG.md)。共享工程调整按实际影响分别记录。尚未发布的工程调整记在 `Unreleased`，当前版本条目只概述仓库元数据所对应的能力，不虚构发行日期或发布状态。
 
 ## 打包产物
 

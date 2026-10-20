@@ -1,0 +1,24 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+  `$object.prototype.$property = $value`,
+  `$object.prototype[$property] = $value`,
+  `$object.prototype = $value`,
+  `delete $object.prototype.$property`,
+  `delete $object.prototype[$property]`,
+  `Object.defineProperty($object.prototype, $property, $descriptor)`,
+  `Object.defineProperties($object.prototype, $descriptors)`,
+  `Object.assign($object.prototype, $args)`,
+  `Object.setPrototypeOf($object.prototype, $value)`,
+  `Reflect.defineProperty($object.prototype, $property, $descriptor)`,
+  `Reflect.set($object.prototype, $property, $value)`,
+  `Reflect.deleteProperty($object.prototype, $property)`,
+  `Reflect.setPrototypeOf($object.prototype, $value)`
+} as $mutation where {
+  $object <: r"^(?:(?:globalThis|window|global)\.)?(?:Object|Array|String|Number|Boolean|Function|Promise|RegExp|Date|Map|Set|WeakMap|WeakSet|Error|Event|EventTarget|KeyboardEvent|MouseEvent|PointerEvent|TouchEvent|UIEvent|Window|Document|Node|Element|HTMLElement|Navigator|XMLHttpRequest|WebSocket)$",
+  register_diagnostic(
+    span = $mutation,
+    message = "Do not modify native built-in or global event prototypes."
+  )
+}

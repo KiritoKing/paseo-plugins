@@ -15,8 +15,8 @@
     "check:env": "node scripts/check-env.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "lint": "biome lint .",
-    "check:style": "biome ci .",
+    "lint": "biome lint . --error-on-warnings",
+    "check:style": "biome ci . --error-on-warnings",
     "check:public": "node scripts/check-public.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "typecheck": "pnpm -r typecheck",
@@ -27,13 +27,16 @@
     "pack:inspect": "node scripts/check-public.mjs --pack",
     "pack:release": "node scripts/package-artifacts.mjs --out work/packages",
     "check": "pnpm check:env && pnpm check:style && pnpm check:public && pnpm check:boundaries && pnpm typecheck && pnpm test && pnpm fixtures:build && pnpm pack:inspect",
-    "lock:runtime": "node scripts/update-consumer-locks.mjs"
+    "lock:runtime": "node scripts/update-consumer-locks.mjs",
+    "hooks:install": "node .githooks/install.mjs",
+    "check:commit": "pnpm check:env && biome check --staged --no-errors-on-unmatched --error-on-warnings && pnpm check:boundaries && pnpm typecheck"
   },
   "packageManager": "pnpm@10.34.7",
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@types/node": "22.20.5",
     "esbuild": "0.28.2",
+    "react-native-web": "0.21.4",
     "semver": "7.8.5",
     "tsx": "4.23.15",
     "typescript": "5.9.3",

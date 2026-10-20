@@ -4,7 +4,7 @@
 
 | 插件 | Paseo 安装 ID | 声明兼容范围 | 用途 |
 | --- | --- | --- | --- |
-| [Paseo UX](packages/paseo-ux/README.md) | `paseo-ux` | `>=0.11.2 <0.12.0` | 图片聚合与预览、媒体面板、工作区会话恢复 |
+| [Paseo Essentials](packages/paseo-ux/README.md) | `paseo-ux` | `>=0.11.2` | 会话附件、全窗口图片查看与工作区会话历史 |
 | [AIW Companion](packages/paseo-aiw-companion/README.md) | `aiw-companion` | `>=0.11.1` | AIW 多仓文件树、Diff、搜索与布局 |
 | [Codex Theme](packages/paseo-codex-theme/README.md) | `paseo-codex-theme` | `>=0.11.2 <0.12.0` | Codex 风格浅色与深色主题 |
 
@@ -32,6 +32,7 @@ paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-codex-theme
 
 ```sh
 pnpm install --frozen-lockfile --ignore-scripts
+pnpm hooks:install
 pnpm check
 ```
 
@@ -45,13 +46,13 @@ pnpm --filter @chlrc/paseo-aiw-companion test
 pnpm --filter @chlrc/paseo-codex-theme typecheck
 ```
 
-Codex Theme 没有独立测试命令。插件由 Paseo 编译 TypeScript 入口，不需要预构建。要在本机开发时加载插件，可从仓库根目录执行 `paseo plugin install ./packages/<package-directory>`，修改后重载对应安装 ID；远端使用时须安装到相应 daemon。UX 浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)。
+Codex Theme 没有独立测试命令。插件由 Paseo 编译 TypeScript 入口，不需要预构建。要在本机开发时加载插件，可从仓库根目录执行 `paseo plugin install ./packages/<package-directory>`，修改后重载对应安装 ID；远端使用时须安装到相应 daemon。Essentials 浏览器夹具见[浏览器文档](packages/paseo-ux/tests/browser/README.md)。
 
-`pnpm check` 会依次运行环境、样式、公开文件、边界、类型、测试、浏览器夹具构建和打包清单检查。开发细项、消费者安装验证与包产物说明见[贡献指南](CONTRIBUTING.md)。
+`pnpm check` 会依次运行环境、样式、公开文件、边界、类型、测试、浏览器夹具构建和打包清单检查。提交和推送 hooks 会转发已有安全 hooks，再执行项目检查。CI 在 Node 22/24 上运行同一套检查；主干要求检查通过，详见[质量门禁](docs/quality-gates.md)。开发细项、消费者安装验证与包产物说明见[贡献指南](CONTRIBUTING.md)。
 
 根目录 `pnpm-lock.yaml` 用于工作区开发和 CI。AIW npm 发布包使用自己的 `npm-shrinkwrap.json` 锁定消费者安装依赖；两份锁文件用途不同。npm 可执行文件只用于对生成的 npm 发布包做消费者安装验证：`pnpm pack:inspect`、`pnpm pack:release` 和包含 `pack:inspect` 的 `pnpm check` 会执行这一步。工作区依赖安装和检查入口仍由 pnpm 驱动。
 
-Git 源码安装 AIW Companion 时，daemon 通过 `pnpm install --prod --frozen-lockfile --ignore-scripts` 准备生产依赖，因此需要 pnpm、Git、ripgrep（`rg`）和 AIW CLI。生成的 npm 包会移除这项 Git 专用准备步骤。UX 与 Codex Theme 只依赖 Paseo 宿主运行环境。
+Git 源码安装 AIW Companion 时，daemon 通过 `pnpm install --prod --frozen-lockfile --ignore-scripts` 准备生产依赖，因此需要 pnpm、Git、ripgrep（`rg`）和 AIW CLI。生成的 npm 包会移除这项 Git 专用准备步骤。Essentials 与 Codex Theme 只依赖 Paseo 宿主运行环境。
 
 `pnpm pack:release` 会在 `work/packages/` 生成 `.tgz` 包供检查和消费者安装验证；它只生成文件，不会发布到 npm。
 

@@ -119,29 +119,6 @@ export function checkPackage(packageRoot) {
         if (ts.isStringLiteral(node.arguments[0])) check(node.arguments[0].text, false);
         else errors.push(`${pkg.name}/${name}: non-literal module loading cannot be checked`);
       }
-      if (
-        sourceLayer === "client" &&
-        name !== "client/web.ts" &&
-        ts.isIdentifier(node) &&
-        ["document", "navigator", "localStorage"].includes(node.text)
-      ) {
-        errors.push(`${pkg.name}/${name}: DOM access belongs in client/web.ts`);
-      }
-      if (
-        sourceLayer === "client" &&
-        (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
-        ts.isIdentifier(node.tagName) &&
-        /^[a-z]/.test(node.tagName.text)
-      ) {
-        errors.push(`${pkg.name}/${name}: client JSX must use React Native components`);
-      }
-      if (
-        sourceLayer === "client" &&
-        ts.isJsxAttribute(node) &&
-        ["className", "onClick"].includes(node.name.getText(source))
-      ) {
-        errors.push(`${pkg.name}/${name}: browser-only JSX props belong in the web adapter`);
-      }
       ts.forEachChild(node, visit);
     }
     visit(source);

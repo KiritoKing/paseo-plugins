@@ -1,6 +1,6 @@
 {
   "name": "@chlrc/paseo-ux",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "files": [
     "paseo-plugin.json",
     "OVERVIEW.md",
@@ -13,6 +13,8 @@
     "shared/",
     "LICENSE",
     "README.md",
+    "README.zh-CN.md",
+    "assets/",
     "CHANGELOG.md"
   ],
   "scripts": {
@@ -29,7 +31,7 @@
     "zod": "^4.4.3"
   },
   "license": "MIT",
-  "description": "连续图片聚合、手势预览、当前工作区会话历史与关闭会话恢复。",
+  "description": "Conversation attachments, image viewing, and everyday session tools for Paseo.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KiritoKing/paseo-plugins.git",

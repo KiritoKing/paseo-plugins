@@ -31,10 +31,27 @@ README and OVERVIEW before changing behavior.
 - The root `@getpaseo/plugin` entry is shared; `/client` and `/server` are distinct.
   Host-provided SDK, React, React Native, React Query and Zod dependencies remain
   development dependencies. Other runtime libraries must be declared dependencies.
-- DOM access belongs in `paseo-ux/client/web.ts`, guarded by the web platform with
-  native fallbacks. Do not add DOM to the shared TypeScript configuration. Browser
-  fixtures may use DOM and simulated host APIs; runtime code must not import them.
+- Essentials (`paseo-ux`) uses public Paseo and React Native APIs throughout its
+  client. Do not add host DOM access, injected menus, global event/prototype
+  patches, or private SDK/CLI module resolution. Other plugins may isolate an
+  explicit web adapter in `client/web.ts`. Do not add DOM to shared TypeScript
+  configuration. Browser fixtures may use DOM and simulated host APIs; runtime
+  code must not import them.
 - `/client/host` is test-only. Do not depend on private host modules in production.
+- Add syntax constraints to the existing Biome configuration and `lint/` Grit
+  rules, with actual Biome positive/negative cases. Keep cross-file dependency
+  checks in the existing boundary graph; do not duplicate syntax scanners.
+
+## Quality gates
+
+- Run `pnpm hooks:install` explicitly after dependency installation. The installer
+  preserves inherited safety hooks and scopes its hook path to this worktree.
+- Commit staged, consistent files: pre-commit rejects partially staged changes
+  and unstaged gate configuration, then checks style, boundaries and types.
+  Pre-push requires a clean tracked tree and runs the complete `pnpm check`.
+- Never bypass inherited hooks to get a commit or push through. Main requires PR
+  checks on Node 22/24; local success is separate from exact-commit CI evidence.
+  See `docs/quality-gates.md` and `.github/rulesets/main-quality.json`.
 
 ## Packaging and evidence
 
