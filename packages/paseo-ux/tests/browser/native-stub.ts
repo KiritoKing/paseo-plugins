@@ -1,1 +1,1 @@
-export const Platform={OS:'web'};
+export const Platform = { OS: "web" };
