@@ -44,6 +44,8 @@ Paseo Essentials 的附件、会话与阅读组件夹具见[浏览器文档](pac
 
 AIW Git 源码安装的准备步骤为 `pnpm install --prod --frozen-lockfile --ignore-scripts`，它在安装插件的 daemon 上执行，因此该 daemon 需要 pnpm。AIW Companion 还需要 Git、ripgrep（`rg`）与 AIW CLI。npm 发布包会移除 Git 源码安装专用的准备步骤。Essentials 使用 Paseo 宿主与其公开 CLI；Markdown 解析器及许可证随包提供。
 
+Paseo 在编译时也解析被 JavaScript 构建器擦除的类型导入。非宿主直接类型导入必须由生产依赖（含对应的 `@types` 包）提供，不能依赖开发目录或传递依赖提升：优先从已声明的生产库推导类型；随包提供的源码须同时提供自包含的声明。Essentials 的 Markdown 声明与解析器来自同一固定版本，并记录各自的来源摘要。隔离消费者检查同时验证类型依赖；它不替代真实 daemon 的 Git 安装与客户端交互验收。
+
 有意调整 AIW 的依赖或版本后，运行 `pnpm lock:runtime` 更新消费者锁，再运行 `pnpm check`。脚本在临时目录保留原锁的已有解析结果，明确使用公共 npm registry，检查来源后才写回。不要把其他机器的 registry 配置或依赖目录复制进仓库。
 
 ## 格式与 lint

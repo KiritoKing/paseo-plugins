@@ -1,5 +1,4 @@
 import type { PluginTheme } from "@getpaseo/plugin";
-import type { RootContent } from "hast";
 import bash from "refractor/bash";
 import { refractor } from "refractor/core";
 import css from "refractor/css";
@@ -11,6 +10,8 @@ import python from "refractor/python";
 import sql from "refractor/sql";
 import tsx from "refractor/tsx";
 import yaml from "refractor/yaml";
+
+type RootContent = ReturnType<typeof refractor.highlight>["children"][number];
 
 for (const grammar of [tsx, css, json, yaml, markdown, go, bash, python, sql, protobuf])
   refractor.register(grammar);

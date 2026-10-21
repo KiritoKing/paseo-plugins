@@ -4,6 +4,10 @@
   "source": "https://registry.npmjs.org/marked/-/marked-18.1.1.tgz",
   "entry": "lib/marked.esm.js",
   "sha256": "930457e5d55439f90465015cc507d3323366e80df5f7a701b61189d4e1046bda",
-  "generatedBy": "esbuild 0.25.12",
+  "declarations": {
+    "entry": "lib/marked.d.ts",
+    "sha256": "d28725982912260cc3fd5d85e753f60cd40d2c7a70672c98ed6fffe4ca4c7142"
+  },
+  "generatedBy": "esbuild 0.28.2",
   "license": "MIT"
 }

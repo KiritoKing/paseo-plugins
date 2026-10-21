@@ -11,12 +11,19 @@ import {
   assertShrinkwrapComplete,
   parseWorkspaceList,
 } from "../lib/package-utils.mjs";
-import { createPackageArtifact } from "../package-artifacts.mjs";
+import { assertRuntimeTypeImportsResolve, createPackageArtifact } from "../package-artifacts.mjs";
 
 function temporaryDirectory(t) {
   const directory = mkdtempSync(join(tmpdir(), "paseo-package-utils-test-"));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   return directory;
+}
+
+function writeTypePackage(packageRoot, name, declaration) {
+  const moduleRoot = join(packageRoot, "node_modules", ...name.split("/"));
+  mkdirSync(moduleRoot, { recursive: true });
+  writeFileSync(join(moduleRoot, "package.json"), JSON.stringify({ name, types: "index.d.ts" }));
+  writeFileSync(join(moduleRoot, "index.d.ts"), declaration);
 }
 
 test("workspace discovery includes a newly added public package from pnpm JSON", (t) => {
@@ -75,6 +82,78 @@ test("package compilation rejects local imports that escape the unpacked package
         "../../other-workspace/index.ts",
       ),
     /Local import escapes packed package/,
+  );
+});
+
+test("packed runtime types resolve through installed and transitive declarations", (t) => {
+  const packageRoot = temporaryDirectory(t);
+  writeFileSync(
+    join(packageRoot, "index.server.ts"),
+    [
+      'import type { Shape } from "runtime-types";',
+      'import type { PluginClientContext } from "@getpaseo/plugin/client";',
+      'import type { ReactNode } from "react";',
+      'import type { z } from "zod";',
+      'import type { Stats } from "node:fs";',
+      "export type RuntimeContract = Shape & { context: PluginClientContext; node: Stats; view: ReactNode; schema: z.ZodType };",
+    ].join("\n"),
+  );
+  writeTypePackage(
+    packageRoot,
+    "runtime-types",
+    'import type { Flavor } from "transitive-types";\nexport interface Shape { flavor: Flavor }\n',
+  );
+  writeTypePackage(packageRoot, "transitive-types", 'export type Flavor = "light" | "dark";\n');
+
+  assert.doesNotThrow(() =>
+    assertRuntimeTypeImportsResolve(packageRoot, ["index.server.ts"], "@chlrc/type-fixture"),
+  );
+});
+
+test("packed runtime types reject a missing transitive declaration dependency", (t) => {
+  const packageRoot = temporaryDirectory(t);
+  writeFileSync(
+    join(packageRoot, "index.server.ts"),
+    'import type { Shape } from "runtime-types";\nexport type RuntimeContract = Shape;\n',
+  );
+  writeTypePackage(
+    packageRoot,
+    "runtime-types",
+    'import type { Flavor } from "missing-transitive-types";\nexport interface Shape { flavor: Flavor }\n',
+  );
+
+  assert.throws(
+    () => assertRuntimeTypeImportsResolve(packageRoot, ["index.server.ts"], "@chlrc/type-fixture"),
+    /missing-transitive-types/,
+  );
+});
+
+test("artifact inspection rejects a type-only legacy Paseo client import", async (t) => {
+  const directory = temporaryDirectory(t);
+  const pkg = {
+    name: "@chlrc/type-only-client-fixture",
+    version: "1.0.0",
+    files: ["index.server.ts", "paseo-plugin.json", "README.md", "OVERVIEW.md", "LICENSE"],
+  };
+  const manifest = { id: "type-only-client-fixture" };
+  writeFileSync(join(directory, "package.json"), JSON.stringify(pkg));
+  writeFileSync(join(directory, "paseo-plugin.json"), JSON.stringify(manifest));
+  writeFileSync(
+    join(directory, "index.server.ts"),
+    'import type { PluginClientContext } from "@getpaseo/client";\nexport type Context = PluginClientContext;\n',
+  );
+  for (const name of ["README.md", "OVERVIEW.md", "LICENSE"])
+    writeFileSync(join(directory, name), "Fixture\n");
+
+  await assert.rejects(
+    createPackageArtifact({
+      packageRoot: directory,
+      packageJson: pkg,
+      pluginManifest: manifest,
+      entries: ["index.server.ts"],
+      hasRuntimeDependencies: false,
+    }),
+    /Unable to resolve non-host runtime type imports.*@getpaseo\/client/s,
   );
 });
 

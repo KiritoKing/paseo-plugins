@@ -7,7 +7,6 @@ import ts from "typescript";
 const builtins = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
 const hostModules = [
   "@getpaseo/plugin",
-  "@getpaseo/client",
   "react",
   "react-native",
   "react-dom",
@@ -16,6 +15,11 @@ const hostModules = [
 ];
 const moduleName = (value) =>
   value.startsWith("@") ? value.split("/").slice(0, 2).join("/") : value.split("/")[0];
+const typesPackageName = (dependency) => {
+  if (!dependency.startsWith("@")) return `@types/${dependency}`;
+  const [scope, name] = dependency.split("/");
+  return `@types/${scope.slice(1)}__${name}`;
+};
 const layer = (path) =>
   path.startsWith("client/") || /^index\.client\./.test(path)
     ? "client"
@@ -75,14 +79,23 @@ export function checkPackage(packageRoot) {
           errors.push(`${prefix}: ${sourceLayer} cannot import SDK ${targetLayer}`);
       }
       const dependency = moduleName(specifier);
-      const declared = { ...pkg.dependencies, ...pkg.devDependencies, ...pkg.peerDependencies };
-      if (
-        !declared[dependency] &&
-        !(typeOnly && declared[`@types/${dependency.replace("@", "").replace("/", "__")}`])
-      ) {
+      const dependencies = pkg.dependencies ?? {};
+      const declared = { ...dependencies, ...pkg.devDependencies, ...pkg.peerDependencies };
+      const typesDependency = typesPackageName(dependency);
+      if (!declared[dependency] && !(typeOnly && declared[typesDependency])) {
         errors.push(`${prefix}: undeclared dependency ${dependency}`);
       }
-      if (!typeOnly && !hostModules.includes(dependency) && !pkg.dependencies?.[dependency]) {
+      if (
+        typeOnly &&
+        !hostModules.includes(dependency) &&
+        !dependencies[dependency] &&
+        !dependencies[typesDependency]
+      ) {
+        errors.push(
+          `${prefix}: type dependency must be in dependencies (${dependency} or ${typesDependency})`,
+        );
+      }
+      if (!typeOnly && !hostModules.includes(dependency) && !dependencies[dependency]) {
         errors.push(`${prefix}: runtime library must be in dependencies`);
       }
     }
@@ -104,6 +117,13 @@ export function checkPackage(packageRoot) {
         ts.isStringLiteral(node.moduleSpecifier)
       ) {
         check(node.moduleSpecifier.text, node.isTypeOnly);
+      } else if (
+        ts.isImportEqualsDeclaration(node) &&
+        ts.isExternalModuleReference(node.moduleReference) &&
+        node.moduleReference.expression &&
+        ts.isStringLiteral(node.moduleReference.expression)
+      ) {
+        check(node.moduleReference.expression.text, node.isTypeOnly);
       } else if (
         ts.isImportTypeNode(node) &&
         ts.isLiteralTypeNode(node.argument) &&
