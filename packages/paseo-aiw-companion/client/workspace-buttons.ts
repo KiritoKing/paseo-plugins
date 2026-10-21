@@ -1,13 +1,15 @@
-import type {
-  PaseoWorkspace,
-  PaseoWorkspaceListResult,
-  PaseoWorkspaceUpdate,
-} from "@getpaseo/client";
 import type { PluginButtonRegistration, PluginClientContext } from "@getpaseo/plugin/client";
 import { availabilityRpc } from "../shared/contracts";
 
+// Derive host-owned types through the provided SDK instead of resolving a separate
+// client package during production plugin compilation.
+type Workspaces = PluginClientContext["paseo"]["workspaces"];
+type PaseoWorkspaceListResult = Awaited<ReturnType<Workspaces["list"]>>;
+type PaseoWorkspace = PaseoWorkspaceListResult["entries"][number];
+type PaseoWorkspaceUpdate = Parameters<Parameters<Workspaces["subscribe"]>[0]>[0];
+
 /** One host-owned observation, batched manifest checks, and exact workspace-scoped buttons. */
-export function contributeWorkspaceButtons(client: PluginClientContext): () => void {
+export function contributeWorkspaceButtons(client: PluginClientContext, title = "AIW"): () => void {
   const known = new Map<string, PaseoWorkspace>();
   const buttons = new Map<string, PluginButtonRegistration[]>();
   const pending = new Set<string>();
@@ -24,14 +26,6 @@ export function contributeWorkspaceButtons(client: PluginClientContext): () => v
     for (const button of buttons.get(id) ?? []) button.remove();
     buttons.delete(id);
   };
-  const open = (workspaceId: string, selected: "business" | "search") => {
-    // Both tabs are created; the selected action owns focus. Paseo reuses their identities.
-    client.openPanel(selected === "business" ? "search" : "business", {
-      workspaceId,
-      location: "explorer",
-    });
-    client.openPanel(selected, { workspaceId, location: "explorer" });
-  };
   const register = (id: string) => {
     if (buttons.has(id) || stopped) return;
     buttons.set(id, [
@@ -39,20 +33,13 @@ export function contributeWorkspaceButtons(client: PluginClientContext): () => v
         id: "open-business",
         workspaceId: id,
         button: {
-          title: "AIW 业务仓",
-          label: "AIW 业务仓",
+          title,
+          label: title,
           icon: "FolderGit2",
-          behavior: { kind: "action", onPress: () => open(id, "business") },
-        },
-      }),
-      client.addHeaderButton({
-        id: "open-search",
-        workspaceId: id,
-        button: {
-          title: "AIW 跨仓搜索",
-          label: "AIW 搜索",
-          icon: "Search",
-          behavior: { kind: "action", onPress: () => open(id, "search") },
+          behavior: {
+            kind: "action",
+            onPress: () => client.openPanel("business", { workspaceId: id, location: "explorer" }),
+          },
         },
       }),
     ]);

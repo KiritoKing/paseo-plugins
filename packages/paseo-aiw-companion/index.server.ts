@@ -11,6 +11,7 @@ import {
   searchRpc,
   treeRpc,
 } from "./shared/contracts";
+import { displayPreferences } from "./shared/display";
 import { layoutPreferences } from "./shared/layout";
 
 async function workspaceRoot(
@@ -25,6 +26,7 @@ async function workspaceRoot(
 export default function contribute(server: PluginServerContext) {
   server.registerSettings(preferences);
   server.registerSettings(layoutPreferences);
+  server.registerSettings(displayPreferences);
   server.handle(availabilityRpc, async ({ workspaceIds }, { paseo }) => {
     const requested = new Set(workspaceIds);
     const roots = new Map<string, string>();

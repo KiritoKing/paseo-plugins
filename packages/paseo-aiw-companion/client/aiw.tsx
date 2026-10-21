@@ -1,10 +1,10 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import type { PluginWorkspacePanelProps } from "@getpaseo/plugin/client";
 import { useRpc, useSettings, useWorkspace } from "@getpaseo/plugin/client";
-import { ScrollView, TextInput } from "@getpaseo/plugin/client/react-native";
+import { ScrollView } from "@getpaseo/plugin/client/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, Switch, Text, View } from "react-native";
+import { Switch, Text, View } from "react-native";
 import {
   type ChangedFile,
   type ChangeGroup,
@@ -14,19 +14,20 @@ import {
   patchRpc,
   preferences,
   type Scope,
-  searchRpc,
 } from "../shared/contracts";
+import { displayPreferences } from "../shared/display";
 import { type FileFilter, filterChangeGroups, matchesFileFilter } from "../shared/file-filters";
 import { Button, Empty, ErrorText, IconButton, makeStyles } from "./controls";
 import type { Reader, ReaderMode } from "./model";
-import { type FileLocator, subscribeToFileRequests } from "./navigation";
+import type { FileLocator } from "./navigation";
 import { PatternDialog } from "./pattern-dialog";
 import { PreviewPane } from "./preview";
 import { patchQueryKey, retainPatchData } from "./reader-cache";
+import { SearchBar, SearchResults, useAiwSearch } from "./search";
 import { SplitPane } from "./split-pane";
 import { ChangeTree, changeTreeExpansionKeys, type Expanded, FileTree } from "./tree";
 
-type ViewTab = "files" | "changes";
+type ViewTab = "files" | "changes" | "search";
 const POLL_MS = 20_000;
 
 function useCatalog(workspaceId: string) {
@@ -167,27 +168,6 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
     const timer = setInterval(() => refreshRef.current(), POLL_MS);
     return () => clearInterval(timer);
   }, []);
-  useEffect(
-    () =>
-      subscribeToFileRequests((locator) => {
-        if (locator.workspaceId !== workspaceId) return;
-        setExpanded((current) => {
-          const next = new Set(current);
-          next.add(`${locator.repoId}:`);
-          const parts = locator.path.split("/");
-          let path = "";
-          for (const part of parts.slice(0, -1)) {
-            path = path ? `${path}/${part}` : part;
-            next.add(`${locator.repoId}:${path}`);
-          }
-          return next;
-        });
-        setReader({ locator });
-        setReaderMode("file");
-        setTab("files");
-      }),
-    [workspaceId],
-  );
   useEffect(() => {
     if (!filesInitialized && catalog.data?.repos[0]) {
       setExpanded(new Set([`${catalog.data.repos[0].id}:`]));
@@ -218,6 +198,28 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
     setReader({ locator });
     setReaderMode("file");
   };
+  const openSearchHit = (locator: FileLocator) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      next.add(`${locator.repoId}:`);
+      const parts = locator.path.split("/");
+      let path = "";
+      for (const part of parts.slice(0, -1)) {
+        path = path ? `${path}/${part}` : part;
+        next.add(`${locator.repoId}:${path}`);
+      }
+      return next;
+    });
+    openFile(locator);
+  };
+  const search = useAiwSearch({
+    workspaceId,
+    catalog: catalog.data,
+    onSearch: () => setTab("search"),
+    onClear: () => setTab((current) => (current === "search" ? "files" : current)),
+  });
+  const display = useSettings(displayPreferences);
+  const title = display.status === "ready" ? display.values.tabTitle : "AIW";
   const openChange = (group: ChangeGroup, change: ChangedFile) => {
     setReader({
       locator: { workspaceId, repoId: change.repoId, path: change.path },
@@ -251,7 +253,7 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
     <View onLayout={(event) => setPanelWidth(event.nativeEvent.layout.width)} style={styles.screen}>
       <View style={styles.row}>
         <View style={{ flex: 1, minWidth: 120 }}>
-          <Text style={styles.title}>AIW 业务仓</Text>
+          <Text style={styles.title}>{title}</Text>
           <Text numberOfLines={1} style={styles.muted}>
             {directory ?? workspaceId}
           </Text>
@@ -264,6 +266,7 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
           onPress={() => setPatternsOpen(true)}
         />
       </View>
+      <SearchBar state={search} catalog={catalog.data} theme={theme} compact={compact} />
       <View style={styles.row}>
         <Choice
           theme={theme}
@@ -277,6 +280,14 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
           selected={tab === "changes"}
           onPress={() => setTab("changes")}
         />
+        {search.submitted ? (
+          <Choice
+            theme={theme}
+            label="搜索结果"
+            selected={tab === "search"}
+            onPress={() => setTab("search")}
+          />
+        ) : null}
       </View>
       {tab === "changes" ? (
         <>
@@ -338,7 +349,7 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
               }}
             >
               <Text style={[styles.muted, { flex: 1 }]}>
-                {tab === "files" ? "文件树" : "改动树"}
+                {tab === "files" ? "文件树" : tab === "changes" ? "改动树" : "搜索结果"}
               </Text>
               {tab === "files" ? (
                 <>
@@ -354,7 +365,10 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
                 theme={theme}
                 label="刷新"
                 icon="RefreshCw"
-                onPress={() => refresh(true)}
+                onPress={() => {
+                  refresh(true);
+                  if (tab === "search") void search.search.refetch();
+                }}
               />
               <IconButton
                 theme={theme}
@@ -362,23 +376,25 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
                 icon={stacked ? "Columns2" : "Rows2"}
                 onPress={toggleDirection}
               />
-              <IconButton
-                theme={theme}
-                label="折叠全部"
-                icon="ChevronsUp"
-                onPress={() =>
-                  setExpanded(
-                    (current) =>
-                      new Set(
-                        [...current].filter((key) =>
-                          tab === "changes"
-                            ? !key.startsWith("changes:")
-                            : key.startsWith("changes:"),
+              {tab !== "search" ? (
+                <IconButton
+                  theme={theme}
+                  label="折叠全部"
+                  icon="ChevronsUp"
+                  onPress={() =>
+                    setExpanded(
+                      (current) =>
+                        new Set(
+                          [...current].filter((key) =>
+                            tab === "changes"
+                              ? !key.startsWith("changes:")
+                              : key.startsWith("changes:"),
+                          ),
                         ),
-                      ),
-                  )
-                }
-              />
+                    )
+                  }
+                />
+              ) : null}
             </View>
             <ScrollView contentContainerStyle={{ paddingVertical: 2 }}>
               {tab === "files" && catalog.data ? (
@@ -392,6 +408,15 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
                   onOpen={openFile}
                   theme={theme}
                   refreshKey={revision}
+                />
+              ) : null}
+              {tab === "search" ? (
+                <SearchResults
+                  state={search}
+                  catalog={catalog.data}
+                  workspaceId={workspaceId}
+                  theme={theme}
+                  onOpen={openSearchHit}
                 />
               ) : null}
               {tab === "changes" ? (
@@ -442,180 +467,5 @@ export function BusinessPanel({ workspaceId, theme, layout }: PluginWorkspacePan
         />
       ) : null}
     </View>
-  );
-}
-
-export function SearchPanel({
-  workspaceId,
-  theme,
-  layout,
-  openBusiness,
-}: PluginWorkspacePanelProps & { openBusiness(locator: FileLocator): void }) {
-  const [panelWidth, setPanelWidth] = useState<number | null>(null);
-  const compact = layout.compact || (panelWidth !== null && panelWidth < 720);
-  const styles = makeStyles(theme, compact);
-  const catalog = useCatalog(workspaceId);
-  const searchCall = useRpc(searchRpc);
-  const [query, setQuery] = useState("");
-  const [regex, setRegex] = useState(false);
-  const [caseSensitive, setCaseSensitive] = useState(false);
-  const [includeText, setIncludeText] = useState("");
-  const [excludeText, setExcludeText] = useState("");
-  const [repoIds, setRepoIds] = useState<string[]>([]);
-  const [initialized, setInitialized] = useState(false);
-  const [submitted, setSubmitted] = useState<null | {
-    query: string;
-    repoIds: string[];
-    regex: boolean;
-    caseSensitive: boolean;
-    include: string[];
-    exclude: string[];
-  }>(null);
-  useEffect(() => {
-    if (!initialized && catalog.data) {
-      setRepoIds(
-        catalog.data.repos.filter((repo) => repo.ready && !repo.error).map((repo) => repo.id),
-      );
-      setInitialized(true);
-    }
-  }, [initialized, catalog.data]);
-  const search = useQuery({
-    queryKey: ["aiw", "search", workspaceId, submitted],
-    queryFn: () => searchCall({ workspaceId, ...submitted! }),
-    enabled: submitted !== null && submitted.repoIds.length > 0,
-  });
-  const split = (text: string) =>
-    text
-      .split("\n")
-      .map((value) => value.trim())
-      .filter(Boolean);
-  const run = () => {
-    const value = query.trim();
-    if (value && repoIds.length)
-      setSubmitted({
-        query: value,
-        repoIds,
-        regex,
-        caseSensitive,
-        include: split(includeText),
-        exclude: split(excludeText),
-      });
-  };
-  const toggleRepo = (id: string) =>
-    setRepoIds((current) =>
-      current.includes(id) ? current.filter((value) => value !== id) : [...current, id],
-    );
-  const names = useMemo(
-    () => new Map(catalog.data?.repos.map((repo) => [repo.id, repo.name]) ?? []),
-    [catalog.data],
-  );
-  return (
-    <ScrollView
-      onLayout={(event) => setPanelWidth(event.nativeEvent.layout.width)}
-      style={styles.screen}
-      contentContainerStyle={styles.stack}
-    >
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>AIW 跨仓搜索</Text>
-          <Text style={styles.muted}>独立于业务仓的变更筛选与对比范围</Text>
-        </View>
-        <Button theme={theme} label="刷新目录" onPress={() => void catalog.refetch()} small />
-      </View>
-      <View style={[styles.surface, { padding: 10, gap: 8 }]}>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={run}
-          accessibilityLabel="搜索文本"
-          placeholder="搜索文本或正则表达式"
-          placeholderTextColor={theme.colors.foregroundMuted}
-          style={styles.input}
-        />
-        <View style={styles.row}>
-          <Text style={styles.muted}>正则</Text>
-          <Switch value={regex} onValueChange={setRegex} />
-          <Text style={styles.muted}>区分大小写</Text>
-          <Switch value={caseSensitive} onValueChange={setCaseSensitive} />
-          <Button
-            theme={theme}
-            label="搜索"
-            onPress={run}
-            active
-            disabled={!query.trim() || repoIds.length === 0}
-          />
-        </View>
-        <Text style={styles.muted}>仓库范围</Text>
-        <View style={styles.row}>
-          {catalog.data?.repos.map((repo) => (
-            <Choice
-              key={repo.id}
-              theme={theme}
-              label={!repo.ready || repo.error ? `${repo.name}（未就绪）` : repo.name}
-              disabled={!repo.ready || Boolean(repo.error)}
-              selected={repoIds.includes(repo.id)}
-              onPress={() => toggleRepo(repo.id)}
-            />
-          ))}
-        </View>
-        <TextInput
-          multiline
-          value={includeText}
-          onChangeText={setIncludeText}
-          accessibilityLabel="搜索 include 路径"
-          placeholder="包含路径（每行一条，可选）"
-          placeholderTextColor={theme.colors.foregroundMuted}
-          style={[styles.input, { minHeight: 52 }]}
-        />
-        <TextInput
-          multiline
-          value={excludeText}
-          onChangeText={setExcludeText}
-          accessibilityLabel="搜索 exclude 路径"
-          placeholder="排除路径（每行一条，可选）"
-          placeholderTextColor={theme.colors.foregroundMuted}
-          style={[styles.input, { minHeight: 52 }]}
-        />
-      </View>
-      {catalog.error ? <ErrorText theme={theme} error={catalog.error} /> : null}
-      {search.isLoading ? <Empty theme={theme}>正在跨仓搜索…</Empty> : null}
-      {search.error ? <ErrorText theme={theme} error={search.error} /> : null}
-      {search.data ? (
-        <View style={[styles.surface, { paddingHorizontal: 10 }]}>
-          <Text style={[styles.muted, { paddingVertical: 8 }]}>
-            {search.data.hits.length} 个命中 · {search.data.truncated ? "结果已截断" : "读取完成"}
-          </Text>
-          {search.data.errors.map((item) => (
-            <Text key={item.repoId} style={{ color: theme.colors.statusWarning }}>
-              {item.repoId}: {item.error}
-            </Text>
-          ))}
-          {search.data.hits.map((hit) => (
-            <Pressable
-              key={`${hit.repoId}:${hit.path}:${hit.line}:${hit.text}`}
-              accessibilityRole="button"
-              accessibilityLabel={`打开 ${hit.path} 第 ${hit.line} 行`}
-              onPress={() =>
-                openBusiness({ workspaceId, repoId: hit.repoId, path: hit.path, line: hit.line })
-              }
-              style={{ paddingVertical: 8, borderTopWidth: 1, borderColor: theme.colors.border }}
-            >
-              <Text style={styles.muted}>
-                {names.get(hit.repoId) ?? "未知仓"} · {hit.repoId}
-              </Text>
-              <Text style={styles.text}>
-                {hit.path}:{hit.line}
-              </Text>
-              <Text
-                numberOfLines={2}
-                style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 12 }}
-              >
-                {hit.text}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-    </ScrollView>
   );
 }
