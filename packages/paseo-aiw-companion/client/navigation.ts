@@ -5,19 +5,23 @@ export type FileLocator = {
   line?: number;
 };
 
-type Listener = (locator: FileLocator) => void;
+const pending = new Set<string>();
+const listeners = new Map<string, Set<() => void>>();
 
-let latest: FileLocator | null = null;
-const listeners = new Set<Listener>();
-
-/** A small client-local bridge between search results and the business reader. */
-export function requestFile(locator: FileLocator): void {
-  latest = locator;
-  for (const listener of listeners) listener(locator);
+/** Search commands reuse the business panel, including before its first mount. */
+export function requestSearchFocus(workspaceId: string): void {
+  const callbacks = listeners.get(workspaceId);
+  if (callbacks?.size) for (const callback of callbacks) callback();
+  else pending.add(workspaceId);
 }
 
-export function subscribeToFileRequests(listener: Listener): () => void {
-  listeners.add(listener);
-  if (latest) listener(latest);
-  return () => listeners.delete(listener);
+export function subscribeToSearchFocus(workspaceId: string, listener: () => void): () => void {
+  const callbacks = listeners.get(workspaceId) ?? new Set();
+  callbacks.add(listener);
+  listeners.set(workspaceId, callbacks);
+  if (pending.delete(workspaceId)) listener();
+  return () => {
+    callbacks.delete(listener);
+    if (!callbacks.size) listeners.delete(workspaceId);
+  };
 }

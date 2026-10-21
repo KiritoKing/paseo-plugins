@@ -47,7 +47,27 @@ for (const fixture of fixtures) {
     },
   });
 }
-console.log(`Built ${fixtures.length} browser fixtures in work/browser.`);
+const aiwInput = resolve(root, "packages/paseo-aiw-companion/tests/browser");
+const aiwRequire = createRequire(resolve(aiwInput, "../../package.json"));
+await copyFile(resolve(aiwInput, "fixture.html"), resolve(output, "aiw-panel.html"));
+await build({
+  entryPoints: [resolve(aiwInput, "fixture.jsx")],
+  outfile: resolve(output, "aiw-panel.js"),
+  bundle: true,
+  platform: "browser",
+  jsx: "automatic",
+  define: { "process.env.NODE_ENV": '"development"' },
+  alias: {
+    react: dirname(aiwRequire.resolve("react/package.json")),
+    "react-dom": dirname(aiwRequire.resolve("react-dom/package.json")),
+    "react-native": resolve(aiwInput, "native.jsx"),
+    "@getpaseo/plugin/client/host": aiwRequire.resolve("@getpaseo/plugin/client/host"),
+    "aiw-fixture-client": aiwRequire.resolve("@getpaseo/plugin/client"),
+    "@getpaseo/plugin/client": resolve(aiwInput, "sdk.jsx"),
+    "@getpaseo/plugin/client/react-native": resolve(aiwInput, "ui.jsx"),
+  },
+});
+console.log(`Built ${fixtures.length + 1} browser fixtures in work/browser.`);
 
 if (process.argv.includes("--serve")) {
   const port = Number(process.env.PORT ?? "8769");
