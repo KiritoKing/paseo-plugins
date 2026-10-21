@@ -10,7 +10,8 @@
     "includes": [
       "**/*.{js,mjs,cjs,jsx,ts,tsx,json,jsonc}",
       "!**/npm-shrinkwrap.json",
-      "!packages/paseo-ux/shared/conversation/vendor/marked.js"
+      "!packages/paseo-ux/shared/conversation/vendor/marked.js",
+      "!packages/paseo-ux/shared/conversation/vendor/marked-types.d.ts"
     ]
   },
   "plugins": [

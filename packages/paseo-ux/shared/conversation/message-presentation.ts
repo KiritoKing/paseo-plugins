@@ -1,6 +1,5 @@
-import type { Token, Tokens } from "marked";
 import { z } from "zod";
-import { Marked } from "./vendor/marked";
+import { Marked, type Token, type Tokens } from "./vendor/marked";
 
 const MAX_SOURCE_BYTES = 64 * 1024;
 const MAX_PRESENTATION_NODES = 4096;

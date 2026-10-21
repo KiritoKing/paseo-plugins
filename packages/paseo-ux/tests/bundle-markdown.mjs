@@ -29,8 +29,10 @@ await build({
 });
 await writeFile(
   resolve(output, "marked.d.ts"),
-  'import type {Marked as MarkedConstructor} from "marked";\nexport declare const Marked: typeof MarkedConstructor;\n',
+  'import type { Marked as MarkedConstructor } from "./marked-types";\n\nexport type { Token, Tokens } from "./marked-types";\nexport declare const Marked: typeof MarkedConstructor;\n',
 );
+const declarations = await readFile(resolve(packageRoot, "lib/marked.d.ts"));
+await writeFile(resolve(output, "marked-types.d.ts"), declarations);
 await writeFile(
   resolve(output, "marked.LICENSE.md"),
   await readFile(resolve(packageRoot, "LICENSE")),
@@ -47,6 +49,10 @@ await writeFile(
       source: "https://registry.npmjs.org/marked/-/marked-18.1.1.tgz",
       entry: "lib/marked.esm.js",
       sha256: digest,
+      declarations: {
+        entry: "lib/marked.d.ts",
+        sha256: createHash("sha256").update(declarations).digest("hex"),
+      },
       generatedBy: `esbuild ${esbuildVersion}`,
       license: metadata.license,
     },

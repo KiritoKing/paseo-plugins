@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Bundle the Markdown parser's self-contained declarations with its source so clean Git and npm installations do not need the development-only `marked` package during host compilation.
 - Merge conversation reading from the removed standalone Codex theme package: Markdown and code layout, collapsible reasoning, optional shell records, and output-only mode. Preserve host-scoped appearance preferences separately from media settings and keep image gallery ownership compatible.
 - Delete the standalone theme package and follow Paseo's active theme. Keep the Essentials installation and package identity unchanged; document migration before removing the old plugin.
 - Fix media indexing and reads on Paseo 0.12.0 by consistently requesting its public projected timeline. Keep epoch, cursor, gap, conversation-source authorization and file-size checks; unexpected projections still fail closed.

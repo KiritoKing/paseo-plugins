@@ -13,6 +13,7 @@ import {
 import { builtinModules } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, join, relative, resolve } from "node:path";
+import typescript from "typescript";
 import { REPOSITORY_ROOT, runPublicCheck } from "./check-public.mjs";
 import {
   assertArchiveContents,
@@ -42,6 +43,10 @@ const HOST_EXTERNALS = [
   "zod",
   "zod/*",
 ];
+const TYPE_HOST_EXTERNALS = HOST_EXTERNALS.filter(
+  (specifier) => specifier !== "@getpaseo/client" && specifier !== "@getpaseo/client/*",
+);
+const NODE_BUILTIN_NAMES = new Set(builtinModules.map((name) => name.replace(/^node:/, "")));
 
 const REPOSITORY_ROOT_REAL = realpathSync(REPOSITORY_ROOT);
 
@@ -174,6 +179,57 @@ async function compileRuntimeEntries(packageRoot, entries, packageName, temporar
   }
 }
 
+function getDiagnosticModuleSpecifier(ts, diagnostic) {
+  const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
+  return message.match(/(?:module|type definition file for) ['"]([^'"]+)['"]/i)?.[1];
+}
+
+function isHostTypeExternal(specifier) {
+  if (!specifier) return false;
+  if (specifier === "node") return true;
+  if (NODE_BUILTIN_NAMES.has(specifier.replace(/^node:/, ""))) return true;
+  return TYPE_HOST_EXTERNALS.some((external) => {
+    if (external.endsWith("/*")) return specifier.startsWith(external.slice(0, -1));
+    return specifier === external;
+  });
+}
+
+export function assertRuntimeTypeImportsResolve(packageRoot, entries, packageName) {
+  const ts = typescript;
+  const program = ts.createProgram({
+    rootNames: entries.map((entry) => resolve(packageRoot, entry)),
+    options: {
+      jsx: ts.JsxEmit.ReactJSX,
+      module: ts.ModuleKind.ESNext,
+      moduleResolution: ts.ModuleResolutionKind.Bundler,
+      noEmit: true,
+      skipLibCheck: false,
+      target: ts.ScriptTarget.ES2022,
+      types: [],
+    },
+  });
+  const unresolved = ts.getPreEmitDiagnostics(program).filter((diagnostic) => {
+    if (![2307, 2688, 7016].includes(diagnostic.code)) return false;
+    return !isHostTypeExternal(getDiagnosticModuleSpecifier(ts, diagnostic));
+  });
+  if (unresolved.length === 0) return;
+
+  const details = unresolved.map((diagnostic) => {
+    const source = diagnostic.file;
+    const position =
+      source && diagnostic.start !== undefined
+        ? source.getLineAndCharacterOfPosition(diagnostic.start)
+        : undefined;
+    const location = source
+      ? `${relative(packageRoot, source.fileName)}${position ? `:${position.line + 1}:${position.character + 1}` : ""}`
+      : packageName;
+    return `${location} TS${diagnostic.code}: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, " ")}`;
+  });
+  throw new Error(
+    `Unable to resolve non-host runtime type imports for ${packageName}:\n${details.map((detail) => `  ${detail}`).join("\n")}`,
+  );
+}
+
 function assertRuntimeLockFromStage(packageRoot, packageJson, packageName, archiveFiles) {
   const hasRuntimeDependencies = Object.keys(packageJson.dependencies ?? {}).length > 0;
   if (!hasRuntimeDependencies) return false;
@@ -262,6 +318,7 @@ export async function createPackageArtifact({
       });
     }
 
+    assertRuntimeTypeImportsResolve(extractedSource.packageRoot, entries, packageName);
     await compileRuntimeEntries(extractedSource.packageRoot, entries, packageName, temporaryRoot);
 
     const finalArchive = createTarball(
