@@ -34,7 +34,7 @@ The [conversation reading contract](../../docs/conversation-reading.md) document
 
 The Media composer entry appears after a metadata check finds attachments in the conversation. You can also open the panel with the Command Center attachment action or the /media command. Search by name or source, filter by media type, and load older history. The metadata check pages through conversation history so an empty newest page does not hide older attachments.
 
-Complete assistant and user messages containing only images are rendered as compact galleries through Paseo's timeline pipeline. Mixed text stays in Paseo's renderer. Select an image to open the full-screen viewer. The viewer supports previous and next navigation, zoom, pan, and reset. Source details and thumbnails are collapsed by default to leave more room for the image. Image gestures are enabled by default; navigation controls remain available when gestures are disabled.
+Complete assistant and user messages containing only images are rendered as compact galleries through Paseo's timeline pipeline. Mixed text stays in Paseo's renderer. Select an image to open the full-screen viewer. The viewer supports previous and next navigation, zoom, pan, and reset. On desktop the mouse wheel zooms around the cursor, dragging pans a zoomed image, double click resets, and the left/right arrow keys switch images; the viewer takes focus when it opens. Source details and thumbnails are collapsed by default to leave more room for the image. Image gestures are enabled by default; navigation controls and arrow keys remain available when gestures are disabled.
 
 The attachment panel shows image previews, lets you play supported local audio, and presents video, document, and file references as cards. HTTP(S) sources can be opened through Paseo's external URL handler. Local video, PDF, and other file contents are not downloaded or previewed in the plugin.
 
@@ -49,7 +49,7 @@ Preferences are scoped to the selected host and apply to every device connected 
 - Attachments enables media indexing and the composer entry.
 - Group image-only messages enables or disables gallery transformation.
 - Visible thumbnails sets the collapsed gallery count from 1 to 8. The default is 3.
-- Image gestures enables zoom, pan, and reset gestures. The default is on.
+- Image gestures enables zoom, pan, and reset gestures, including desktop wheel zoom. The default is on. Arrow-key navigation is unaffected by this switch.
 - Session history enables the workspace session list and restore actions. The default is on.
 - Audio playback enables new playback requests for supported local audio. The default is on. Paseo exposes no stop control for an already playing clip.
 

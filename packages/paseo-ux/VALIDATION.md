@@ -1,3 +1,27 @@
+# 桌面大图交互恢复验证
+
+日期：2026-10-21。范围：恢复全窗口图片查看器改版后丢失的桌面交互（滚轮缩放、鼠标拖拽、双击复位、左右方向键换图）。工程基线为 `origin/main` 的 `0effa0f7debad268283e39f8ff97671c5dc6f8ce`；最终实现以本记录所在提交为准。
+
+## 本地检查
+
+- macOS arm64、Node 24.22.0、pnpm 10.34.7。完整 `pnpm check` 通过：Biome 格式与规则（13 项 info，无 warning／error）、公开源码与依赖边界、类型、153 项测试（Essentials 76、AIW 15、工程 62）、浏览器夹具构建、两个包的隔离消费者安装与入口编译。Essentials 新增 2 项测试覆盖 `shared/image-input` 的滚轮倍率与方向键过滤。
+- 桌面输入集中在 `client/web.ts` 显式适配层：仅使用 React Native Web 公开转发的元素属性（滚轮、键盘）与公开 RN `measureInWindow`／`focus` 契约，不含 DOM/浏览器全局、宿主 DOM 操作、注入菜单或原型补丁。Biome 规则与正反例未放宽；既有负例（Essentials `client/web.ts` 引用 `document`）仍被拒绝，其他插件的 `client/web.ts` 仍可使用 DOM。`docs/quality-gates.md`、`lint/README.md` 与 `AGENTS.md` 同步了这一边界表述。
+- `@chlrc/paseo-ux` 打包含 40 个文件，运行时入口编译通过；版本记为 0.3.1，CHANGELOG 记录本次恢复项。
+
+## 浏览器夹具
+
+Paseo browser 的 Desktop host 打开 `essentials.html` 的实际生产入口（真实 React Native Web 组件、合成宿主 API）。`window.runImageChecks()` 的 14 项交互检查全部通过：打开即接管焦点、滚轮放大／缩小／连续缩放、左右方向键换图、其他按键不换图、双击复位、适应状态拖拽换图（含反向回退）、放大后拖拽平移、双指捏合缩放、Escape 关闭。Escape 关闭现由查看器键盘面自行处理：此前依赖宿主 Modal 的 keyup 处理时，实测同页时序下会偶发失效。
+
+- 手动开关验证：关闭“图片手势”后滚轮缩放被阻止（100% 不变），左右方向键仍可换图（1/5 → 2/5）；重新开启后开关状态恢复。
+- 夹具输入由页面脚本派发合成事件，覆盖 React 事件与 React Native Web 转发路径，但不是真实硬件输入；夹具不连接真实会话，不替代 Paseo 宿主验收。
+
+## 未验证范围
+
+- 真实 Paseo Desktop 客户端中的滚轮、鼠标与键盘手感，iOS/Android 物理触控与安全区，以及市场截图未在本轮验收；远端 CI 以 PR 精确提交状态为准。
+- 滚轮缩放通过 React 合成事件生效，除 `overscrollBehavior` 外未验证宿主页面可滚动区域中的阻止滚动效果。
+
+---
+
 # 会话阅读整合验证
 
 日期：2026-10-21。已合入主干 `4952111`；整合基线为合并提交 `b23a122`。以下检查针对其后的整合工作树，最终实现以本记录所在提交为准。旧主题包删除，Essentials 保留安装 ID、包身份和媒体设置，会话偏好独立使用原 `appearance` ID／版本 1。

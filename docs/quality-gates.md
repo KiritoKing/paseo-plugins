@@ -6,7 +6,7 @@
 | --- | --- |
 | 所有插件生产源码 | 仅使用公共 SDK 入口；禁止私有 `dist`、`src`、`internal` 路径及 SDK host 测试适配器；禁止修改宿主或内建对象原型 |
 | `client/` 与 `index.client.*` | 禁止 Node 模块和 Node 全局；使用 React Native JSX；DOM 适配仅限其他插件显式的 `client/web.ts` |
-| Essentials 的全部 client 源码 | 禁止 DOM/浏览器全局与 HTML JSX 属性；使用公开的 React Native/Paseo API，没有 web adapter 例外 |
+| Essentials 的全部 client 源码 | 禁止 DOM/浏览器全局与宿主 DOM 操作；仅 `client/web.ts` 可用 React Native Web 公开转发的元素属性接收桌面滚轮与键盘输入，其余源码只用公开的 React Native/Paseo API |
 | `shared/` | 不得依赖 Node、React Native 或 client/server 运行时 |
 | 测试、浏览器夹具与工程脚本 | 可使用各自执行环境；不通过全局禁用规则为生产源码开口 |
 

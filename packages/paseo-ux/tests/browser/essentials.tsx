@@ -15,6 +15,7 @@ import {
   sampleImage,
 } from "./essentials-host";
 import { syntheticHostTheme } from "./host-theme";
+import { runImageChecks } from "./image-checks";
 
 const registrations = new Map<string, { visible?: boolean }>();
 const settingsScreens = new Map<string, ComponentType<PluginSurfaceProps>>();
@@ -77,9 +78,11 @@ function App() {
     const callback = () => render((value) => value + 1);
     callbacks.add(callback);
     const stop = contribute(client);
+    window.runImageChecks = runImageChecks;
     return () => {
       callbacks.delete(callback);
       stop();
+      delete window.runImageChecks;
     };
   }, []);
   useEffect(() => {
