@@ -19,6 +19,7 @@ import {
   zoomAt,
 } from "../shared/viewport";
 import { createImagePanResponder, type ImageGestureActions } from "./image-gestures";
+import { DesktopKeySurface, DesktopZoomSurface } from "./web";
 
 export type PreviewImage = { source: string; label: string; uri?: string };
 export function imageEntries(images: readonly PreviewImage[]) {
@@ -253,182 +254,206 @@ export function ImagePreview({
           backgroundColor: theme.colors.surface0,
         }}
       >
-        <View style={{ flex: 1, paddingHorizontal: 8, backgroundColor: theme.colors.surface0 }}>
-          <View style={{ height: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text
-              accessibilityRole="header"
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={{
-                flex: 1,
-                minWidth: 0,
-                color: theme.colors.foreground,
-                fontSize: 16,
-                fontWeight: "600",
-              }}
-            >
-              {image.label}
-            </Text>
-            <Text
-              accessibilityLabel={`第 ${selectedIndex + 1} 张，共 ${images.length} 张`}
-              style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}
-            >
-              {selectedIndex + 1} / {images.length}
-            </Text>
-            {button(detailsOpen ? "Hide image details" : "Show image details", "Info", () =>
-              setDetailsOpen((open) => !open),
-            )}
-            {button("关闭图片预览", "X", onClose)}
-          </View>
-
-          <View
-            style={{
-              height: 52,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 8,
-            }}
-          >
-            <View style={{ flexDirection: "row", gap: 6 }}>
-              {button("上一张", "ChevronLeft", () => move(-1), selectedIndex === 0)}
-              {button("下一张", "ChevronRight", () => move(1), selectedIndex === images.length - 1)}
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-              {button("缩小", "ZoomOut", () => setZoom(1 / 1.25), zoom <= 0.25)}
-              <Text
-                accessibilityLiveRegion="polite"
-                style={{
-                  minWidth: 32,
-                  textAlign: "center",
-                  color: theme.colors.foregroundMuted,
-                  fontSize: 12,
-                }}
-              >
-                {Math.round(zoom * 100)}%
-              </Text>
-              {button("放大", "ZoomIn", () => setZoom(1.25), zoom >= 8)}
-              {button("适应窗口", "Maximize", reset)}
-            </View>
-          </View>
-
-          <View
-            testID="image-preview-canvas"
-            onLayout={onCanvasLayout}
-            {...(gesturesEnabled ? panResponder.panHandlers : {})}
-            style={{
-              flex: 1,
-              minHeight: 64,
-              overflow: "hidden",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: theme.colors.surface0,
-            }}
-          >
-            {failed || loadError ? (
-              <View style={{ alignItems: "center", gap: 12, padding: 20 }}>
-                <Text accessibilityRole="alert" style={{ color: theme.colors.foreground }}>
-                  {loadError || "图片加载失败"}
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="重试读取图片"
-                  onPress={() => {
-                    setFailed(false);
-                    setLoadError("");
-                    setRetry((value) => value + 1);
-                  }}
-                >
-                  <Text style={{ color: theme.colors.accent }}>重试</Text>
-                </Pressable>
-              </View>
-            ) : !uri ? (
-              <Text style={{ color: theme.colors.foregroundMuted, padding: 24 }}>
-                正在读取图片…
-              </Text>
-            ) : (
-              <View
-                pointerEvents="none"
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  transform: [{ translateX: viewport.x }, { translateY: viewport.y }],
-                }}
-              >
-                <Image
-                  key={`${uri}:${retry}`}
-                  source={{ uri }}
-                  resizeMode="contain"
-                  style={{ width: "100%", height: "100%", transform: [{ scale: zoom }] }}
-                  onError={() => setFailed(true)}
-                  accessibilityLabel={image.label}
-                  accessibilityHint={
-                    gesturesEnabled ? "双指缩放，拖动已放大的图片，双击复位。" : ""
-                  }
-                />
-              </View>
-            )}
-          </View>
-
-          {detailsOpen ? (
+        <DesktopKeySurface
+          actions={{ previous: () => move(-1), next: () => move(1), dismiss: onClose }}
+          style={{ flex: 1 }}
+        >
+          <View style={{ flex: 1, paddingHorizontal: 8, backgroundColor: theme.colors.surface0 }}>
             <View style={{ height: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Text
+                accessibilityRole="header"
                 numberOfLines={1}
-                selectable
-                style={{ flex: 1, minWidth: 0, color: theme.colors.foregroundMuted, fontSize: 11 }}
+                ellipsizeMode="tail"
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  color: theme.colors.foreground,
+                  fontSize: 16,
+                  fontWeight: "600",
+                }}
               >
-                {image.source.startsWith("data:") ? "内嵌图片" : image.source}
+                {image.label}
               </Text>
-              {button("复制图片来源", "Copy", () => {
-                void copyText(image.source)
-                  .then(() => toast.show("已复制图片来源"))
-                  .catch(() => toast.error("复制失败"));
-              })}
+              <Text
+                accessibilityLabel={`第 ${selectedIndex + 1} 张，共 ${images.length} 张`}
+                style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}
+              >
+                {selectedIndex + 1} / {images.length}
+              </Text>
+              {button(detailsOpen ? "Hide image details" : "Show image details", "Info", () =>
+                setDetailsOpen((open) => !open),
+              )}
+              {button("关闭图片预览", "X", onClose)}
             </View>
-          ) : null}
 
-          {detailsOpen && images.length > 1 ? (
-            <ScrollView
-              horizontal
-              style={{ height: 56, flexGrow: 0 }}
-              contentContainerStyle={{ alignItems: "center", gap: 8 }}
+            <View
+              style={{
+                height: 52,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 8,
+              }}
             >
-              {imageEntries(images).map(({ image: item, key }, position) => (
-                <Pressable
-                  key={key}
-                  accessibilityRole="button"
-                  accessibilityLabel={`查看第 ${position + 1} 张图片：${item.label}`}
-                  accessibilityState={{ selected: selectedIndex === position }}
-                  onPress={() => select(position)}
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                {button("上一张", "ChevronLeft", () => move(-1), selectedIndex === 0)}
+                {button(
+                  "下一张",
+                  "ChevronRight",
+                  () => move(1),
+                  selectedIndex === images.length - 1,
+                )}
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                {button("缩小", "ZoomOut", () => setZoom(1 / 1.25), zoom <= 0.25)}
+                <Text
+                  accessibilityLiveRegion="polite"
                   style={{
-                    width: 48,
-                    height: 48,
-                    borderWidth: 2,
-                    borderColor:
-                      selectedIndex === position ? theme.colors.accent : theme.colors.border,
-                    borderRadius: 6,
-                    overflow: "hidden",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    minWidth: 32,
+                    textAlign: "center",
+                    color: theme.colors.foregroundMuted,
+                    fontSize: 12,
                   }}
                 >
-                  {item.uri ? (
-                    <Image
-                      source={{ uri: item.uri }}
-                      resizeMode="contain"
-                      style={{ width: 44, height: 44 }}
-                    />
-                  ) : (
-                    <Text style={{ color: theme.colors.foregroundMuted }}>{position + 1}</Text>
-                  )}
-                </Pressable>
-              ))}
-            </ScrollView>
-          ) : null}
-        </View>
+                  {Math.round(zoom * 100)}%
+                </Text>
+                {button("放大", "ZoomIn", () => setZoom(1.25), zoom >= 8)}
+                {button("适应窗口", "Maximize", reset)}
+              </View>
+            </View>
+
+            <DesktopZoomSurface
+              testID="image-preview-canvas"
+              onLayout={onCanvasLayout}
+              actions={{
+                enabled: () => gesturesEnabled,
+                zoom: (factor, center) =>
+                  commitViewport(
+                    clampViewport(zoomAt(viewportRef.current, factor, center), boundsRef.current),
+                  ),
+              }}
+              {...(gesturesEnabled ? panResponder.panHandlers : {})}
+              style={{
+                flex: 1,
+                minHeight: 64,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: theme.colors.surface0,
+              }}
+            >
+              {failed || loadError ? (
+                <View style={{ alignItems: "center", gap: 12, padding: 20 }}>
+                  <Text accessibilityRole="alert" style={{ color: theme.colors.foreground }}>
+                    {loadError || "图片加载失败"}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="重试读取图片"
+                    onPress={() => {
+                      setFailed(false);
+                      setLoadError("");
+                      setRetry((value) => value + 1);
+                    }}
+                  >
+                    <Text style={{ color: theme.colors.accent }}>重试</Text>
+                  </Pressable>
+                </View>
+              ) : !uri ? (
+                <Text style={{ color: theme.colors.foregroundMuted, padding: 24 }}>
+                  正在读取图片…
+                </Text>
+              ) : (
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    transform: [{ translateX: viewport.x }, { translateY: viewport.y }],
+                  }}
+                >
+                  <Image
+                    key={`${uri}:${retry}`}
+                    source={{ uri }}
+                    resizeMode="contain"
+                    style={{ width: "100%", height: "100%", transform: [{ scale: zoom }] }}
+                    onError={() => setFailed(true)}
+                    accessibilityLabel={image.label}
+                    accessibilityHint={
+                      gesturesEnabled
+                        ? "双指或滚轮缩放，拖动已放大的图片，双击复位，左右方向键切换图片。"
+                        : "左右方向键切换图片。"
+                    }
+                  />
+                </View>
+              )}
+            </DesktopZoomSurface>
+
+            {detailsOpen ? (
+              <View style={{ height: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Text
+                  numberOfLines={1}
+                  selectable
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    color: theme.colors.foregroundMuted,
+                    fontSize: 11,
+                  }}
+                >
+                  {image.source.startsWith("data:") ? "内嵌图片" : image.source}
+                </Text>
+                {button("复制图片来源", "Copy", () => {
+                  void copyText(image.source)
+                    .then(() => toast.show("已复制图片来源"))
+                    .catch(() => toast.error("复制失败"));
+                })}
+              </View>
+            ) : null}
+
+            {detailsOpen && images.length > 1 ? (
+              <ScrollView
+                horizontal
+                style={{ height: 56, flexGrow: 0 }}
+                contentContainerStyle={{ alignItems: "center", gap: 8 }}
+              >
+                {imageEntries(images).map(({ image: item, key }, position) => (
+                  <Pressable
+                    key={key}
+                    accessibilityRole="button"
+                    accessibilityLabel={`查看第 ${position + 1} 张图片：${item.label}`}
+                    accessibilityState={{ selected: selectedIndex === position }}
+                    onPress={() => select(position)}
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderWidth: 2,
+                      borderColor:
+                        selectedIndex === position ? theme.colors.accent : theme.colors.border,
+                      borderRadius: 6,
+                      overflow: "hidden",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.uri ? (
+                      <Image
+                        source={{ uri: item.uri }}
+                        resizeMode="contain"
+                        style={{ width: 44, height: 44 }}
+                      />
+                    ) : (
+                      <Text style={{ color: theme.colors.foregroundMuted }}>{position + 1}</Text>
+                    )}
+                  </Pressable>
+                ))}
+              </ScrollView>
+            ) : null}
+          </View>
+        </DesktopKeySurface>
       </SafeAreaView>
     </Modal>
   );

@@ -4,7 +4,7 @@ Paseo Essentials helps you read conversations, browse attachments, view images, 
 
 Conversation reading controls font size, density, width, code wrapping, and disclosure. Output-only mode hides tool and reasoning rows without deleting history; switching back restores category preferences. Native tool grouping is the default. Streaming prose, rich or unsupported messages, and unknown tools retain host rendering. The reading controls are independent of media and session features and follow the active Paseo theme; the plugin does not provide themes.
 
-Image-only assistant and user messages are displayed as galleries; mixed text remains in Paseo's renderer. The attachment panel indexes references in the selected conversation's public timeline and structured tool results. Search by name or path, filter by media type, and load older history. The composer entry appears after the metadata index finds attachments in the conversation.
+Image-only assistant and user messages are displayed as galleries; mixed text remains in Paseo's renderer. The full-screen image viewer supports touch gestures and, on desktop, mouse wheel zoom, drag pan, double-click reset, and arrow-key image navigation. The attachment panel indexes references in the selected conversation's public timeline and structured tool results. Search by name or path, filter by media type, and load older history. The composer entry appears after the metadata index finds attachments in the conversation.
 
 The index covers references exposed in the host's message text and tool details. It follows the host's merged conversation view; it does not recover old tool details or separate attachment payloads omitted from that history.
 

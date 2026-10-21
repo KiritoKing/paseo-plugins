@@ -10,8 +10,9 @@ existing `biome lint` and `biome ci` commands; they are not a second scanner.
   project dependency check and is intentionally outside this rule set.
 - Essentials client source and `index.client.*` reject unshadowed browser DOM
   and global event APIs. Its file globs include any future `client/web.ts`, so
-  adding an adapter does not exempt Essentials. Other plugin `client/web.ts`
-  adapters may use DOM APIs.
+  adding an adapter does not exempt Essentials from DOM globals; that file may
+  only pass the element props React Native Web forwards publicly, such as wheel
+  and keyboard input. Other plugin `client/web.ts` adapters may use DOM APIs.
 - Native client JSX rejects lowercase tags and selected Web-only props.
 - Runtime source rejects direct writes and common reflective mutations of
   native built-in and global event prototypes. Ordinary plugin-defined class

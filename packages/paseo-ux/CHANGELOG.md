@@ -14,7 +14,11 @@
 - Reopen retained sessions through the public daemon-host CLI, verifying the original ID and state; use plugin-owned navigation entries.
 - Integrate public/native constraints into Biome, preserve inherited Git hooks, and run the complete CI gate on Node 22/24.
 - Remove unsupported global shortcut overrides and host-menu injection. Video playback and generic file preview/download remain deferred. Physical iOS/Android acceptance and marketplace screenshots remain outstanding.
+- Restore the desktop image interactions the full-window viewer dropped: mouse wheel zooms around the cursor, dragging pans a zoomed image and swipes a fitted one, double click resets, and the left/right arrow keys switch images. Touch pinch, pan, swipe, and double-tap behavior is unchanged.
+- Take viewer focus when the preview opens so keyboard navigation works without a prior click. Wheel zoom follows the Image gestures setting; arrow-key navigation and the navigation buttons stay available when gestures are disabled.
+- Handle Escape in the viewer's own keyboard surface instead of relying on the host modal's timing-dependent key handling, so closing the preview no longer depends on which modal is registered as active.
+- Keep desktop input inside the explicit `client/web.ts` adapter using React Native Web's public element props. Essentials still avoids DOM globals, host DOM access, injected menus, and prototype patches.
 
-## Current package version (0.3.0)
+## Current package version (0.3.1)
 
-Repository candidate only; this entry does not claim npm or marketplace publication. Validation evidence is recorded in `VALIDATION.md`.
+Repository candidate only; this entry does not claim npm or marketplace publication. The image viewer again supports desktop wheel zoom, drag pan, double-click reset, and arrow-key navigation next to touch gestures. Validation evidence is recorded in `VALIDATION.md`.

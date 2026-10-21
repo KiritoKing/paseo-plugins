@@ -14,7 +14,7 @@ pnpm fixtures:serve
 建议回归顺序：
 
 1. 在 attachments 中检查五类附件；搜索与筛选后结果正确，空搜索结果保留工具栏。用 360×800、800×360 和宽窗口检查列表滚动。
-2. 打开图片，检查全窗口 Modal、44px 控件、前后切换、缩放与切图复位、双指缩放后平移、适应状态下滑动切图、Escape 关闭与焦点返回。
+2. 打开图片，检查全窗口 Modal、44px 控件、前后切换、缩放与切图复位、双指／滚轮缩放后平移、适应状态下滑动切图、双击复位、左右方向键换图、Escape 关闭与焦点返回。也可以在 `essentials.html` 控制台运行 `await window.runImageChecks()`，一次性跑完打开接管焦点、滚轮缩放、方向键换图、双击复位、拖拽换图与平移、捏合缩放和 Escape 关闭。
 3. 进入 features，分别关闭附件、纯图片聚合、图片手势、会话历史及音频。检查 Registration state 中对应注册和订阅的清理，独立项不互相误关。
 4. 切换 Empty：自动 pill 应隐藏；Add first attachment 后应显示。Older attachments 的最新页没有附件，较早页面有附件，pill 仍应显示，面板可加载较早附件。
 5. Fail next history request 后刷新，出现错误和重试入口；已发现附件的 pill 不应被误隐藏。

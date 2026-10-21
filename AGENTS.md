@@ -33,7 +33,9 @@ README and OVERVIEW before changing behavior.
   development dependencies. Other runtime libraries must be declared dependencies.
 - Essentials (`paseo-ux`) uses public Paseo and React Native APIs throughout its
   client. Do not add host DOM access, injected menus, global event/prototype
-  patches, or private SDK/CLI module resolution. Other plugins may isolate an
+  patches, or private SDK/CLI module resolution. Desktop input may pass the
+  element props React Native Web forwards publicly (wheel and keyboard) inside
+  `client/web.ts` only, without DOM globals. Other plugins may isolate an
   explicit web adapter in `client/web.ts`. Do not add DOM to shared TypeScript
   configuration. Browser fixtures may use DOM and simulated host APIs; runtime
   code must not import them.
