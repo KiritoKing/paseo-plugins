@@ -1,8 +1,0 @@
-{
-  "id": "paseo-codex-theme",
-  "name": "Codex Theme",
-  "description": "Codex 风格的浅色与深色主题：中性灰阶、柔和面板和黑白强调色。",
-  "requirements": {
-    "paseo": ">=0.11.2 <0.12.0"
-  }
-}

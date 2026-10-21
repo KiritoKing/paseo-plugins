@@ -8,9 +8,18 @@ import {
   readMedia,
   resolveMedia,
 } from "./shared/contracts";
+import { appearanceSettings } from "./shared/conversation/appearance";
 import { listSessions, restoreSession } from "./shared/sessions";
 
 export default function contribute(server: PluginServerContext) {
+  try {
+    // Keep the old setting ID and version so saved conversation preferences
+    // remain compatible when the feature moves into Essentials.
+    server.registerSettings(appearanceSettings);
+  } catch {
+    // Presentation is optional; a settings registration failure must not block
+    // the existing media and session RPC handlers.
+  }
   const settings = server.registerSettings(mediaSettings);
   const features = async () => {
     const current = await settings.read();

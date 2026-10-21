@@ -18,22 +18,32 @@ const fixtures = [
     native: "screen-native.jsx",
     ui: "screen-ui.jsx",
   },
+  {
+    name: "conversation-ui",
+    directory: "packages/paseo-ux/tests/browser/conversation",
+    entry: "app.tsx",
+    nativeModule: "react-native-web",
+    host: "host.tsx",
+  },
 ];
 
 await mkdir(output, { recursive: true });
 for (const fixture of fixtures) {
-  await copyFile(resolve(input, `${fixture.name}.html`), resolve(output, `${fixture.name}.html`));
+  const source = fixture.directory ? resolve(root, fixture.directory) : input;
+  const fixtureRequire = createRequire(resolve(source, fixture.entry));
+  await copyFile(resolve(source, `${fixture.name}.html`), resolve(output, `${fixture.name}.html`));
   await build({
-    entryPoints: [resolve(input, fixture.entry)],
+    entryPoints: [resolve(source, fixture.entry)],
     outfile: resolve(output, `${fixture.name}.js`),
     bundle: true,
     platform: "browser",
     define: { "process.env.NODE_ENV": '"development"' },
     alias: {
-      "react-native":
-        fixture.native === "react-native-web"
+      "react-native": fixture.nativeModule
+        ? fixtureRequire.resolve(fixture.nativeModule)
+        : fixture.native === "react-native-web"
           ? dirname(fileURLToPath(import.meta.resolve("react-native-web/package.json")))
-          : resolve(input, fixture.native),
+          : resolve(source, fixture.native),
       ...(fixture.name === "essentials"
         ? {
             react: dirname(packageRequire.resolve("react/package.json")),
@@ -43,8 +53,27 @@ for (const fixture of fixtures) {
             "@getpaseo/plugin/client/react-native": resolve(input, "essentials-host.tsx"),
           }
         : {}),
-      ...(fixture.ui ? { "@getpaseo/plugin/client/react-native": resolve(input, fixture.ui) } : {}),
+      ...(fixture.ui
+        ? { "@getpaseo/plugin/client/react-native": resolve(source, fixture.ui) }
+        : {}),
     },
+    ...(fixture.host
+      ? {
+          jsx: "automatic",
+          define: { "process.env.NODE_ENV": '"development"', __DEV__: "true" },
+          plugins: [
+            {
+              name: "public-host-fixture",
+              setup(builder) {
+                builder.onResolve(
+                  { filter: /^@getpaseo\/plugin\/client(?:\/react-native|\/ui)?$/ },
+                  () => ({ path: resolve(source, fixture.host) }),
+                );
+              },
+            },
+          ],
+        }
+      : {}),
   });
 }
 const aiwInput = resolve(root, "packages/paseo-aiw-companion/tests/browser");

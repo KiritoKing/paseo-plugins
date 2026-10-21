@@ -9,7 +9,7 @@ pnpm fixtures:build
 pnpm fixtures:serve
 ```
 
-打开 `http://127.0.0.1:8769/essentials.html` 或 `http://127.0.0.1:8769/session-screen.html`。服务没有热更新，修改源码后重新构建并刷新。用完后停止自己启动的服务。
+打开 `http://127.0.0.1:8769/essentials.html`、`http://127.0.0.1:8769/session-screen.html` 或 `http://127.0.0.1:8769/conversation-ui.html`。后者使用迁入 Essentials 的真实会话呈现与设置组件，提供正文、代码、思考、工具失败、仅输出与保存／复制错误场景。服务没有热更新，修改源码后重新构建并刷新。用完后停止自己启动的服务。
 
 建议回归顺序：
 
@@ -20,5 +20,7 @@ pnpm fixtures:serve
 5. Fail next history request 后刷新，出现错误和重试入口；已发现附件的 pill 不应被误隐藏。
 6. gallery 检查默认 3/5 张、展开/收起与重复资源键；关闭聚合后手工渲染夹具不代表宿主仍有 renderer 注册。
 7. 刷新页面后切换 Empty，点击 Delay next history response，再点击面板的 Refresh attachments，并在 600ms 内点击 Add first attachment。旧请求在 1200ms 后返回空页；面板应自动继续请求并显示 6 个合成附件，无需手动再次刷新。
+8. 进入 reading，切换仅输出、切回按类别设置、关闭／开启会话排版。Registration state 中仅阅读 transformer 改变，图片库、附件和会话项保持。关闭阅读后附件列表和图片 Modal 仍可使用。
+9. 在 features 关闭图片聚合及附件，阅读 transformer 与会话项保持；在独立 conversation-ui 夹具检查完成／流式状态的仅输出、切回类别偏好，以及浅深色和窄窗。
 
 夹具截图只可用作开发证据，不可冒充市场要求的实际 Paseo 界面截图。原生 iOS/Android 的安全区域、系统返回、旋转、焦点和真实触控仍需设备验收。当前证据见 [VALIDATION.md](../../VALIDATION.md)。
