@@ -1,0 +1,13 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+or {
+  `<$tag $attrs />`,
+  `<$tag $attrs>$...</$tag>`
+} as $element where {
+  $tag <: r"^[a-z][a-z0-9-]*$",
+  register_diagnostic(
+    span = $element,
+    message = "Native client JSX must use React Native components, not lowercase HTML elements."
+  )
+}

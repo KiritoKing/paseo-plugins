@@ -1,56 +1,76 @@
-# paseo-ux
+# Paseo Essentials
 
-用于持续改进 Paseo 使用体验的独立插件。包含媒体预览增强和工作区会话恢复。
+Paseo Essentials adds conversation attachment browsing, image galleries, and workspace session history to Paseo. The npm package is @chlrc/paseo-ux. The manifest ID remains paseo-ux to preserve the existing plugin identity and settings namespace.
 
-## 使用
+## Requirements
 
-- 图片组默认显示 3 张缩略图和总数，超出部分可展开、收起。
-- 点击缩略图查看大图，按 `←` / `→` 切换上一张、下一张（支持连续按键，首尾不循环）；滚轮以鼠标位置为中心缩放，拖拽平移，双击或“适应窗口”复位，也可用缩放按钮。缩放范围 25% 至 800%。
-- `Cmd+Shift+T` 恢复当前工作区最近关闭的会话；`Ctrl+反引号` 新建终端。
-- 新建标签菜单 → **恢复工作区会话…**，或工作区顶部 **会话**，在弹窗里查看、搜索并打开当前工作区创建过的会话；取消保留原工作区和草稿，选择成功后关闭弹窗。按关闭时间倒序排列；重开时保持原会话 ID。
-- 输入框上方点击 **媒体**，在 Explorer 打开 **会话媒体**；也可用命令中心的 **Paseo UX · 会话媒体** 或 `/media`。
-- 设置 → 插件 → Paseo UX → 媒体预览增强，可切换聚合和默认显示数量。
+- Paseo app and daemon 0.11.2 or later.
+- Node.js 22 or 24 and pnpm 10.34.7 for repository development.
+- Session restoration requires the public Paseo CLI on the daemon host's PATH.
 
-## 兼容范围与运行依赖
+## Install from this checkout
 
-声明的 Paseo 兼容范围为 `>=0.11.2 <0.12.0`。历史验证记录涉及 Paseo 0.11.2；这不代表整个声明范围都经过验证或得到保证。运行插件只需要 Paseo 宿主环境，不额外依赖 Git、rg、AIW CLI 或其他外部工具。
+Install the plugin on the daemon that will host it. From the repository root:
 
-`paseo plugin remove paseo-ux` 会删除该 daemon 上此插件的设置目录。升级若需要先移除再安装，或卸载后可能需要恢复设置，请先备份对应的 `plugin-settings/paseo-ux/`；重装后恢复并读回。
+    cd packages/paseo-ux
+    paseo plugin install .
+    paseo plugin reload paseo-ux
 
-## 本地开发
+For a remote daemon, install and reload the plugin on that daemon host. Do not rely on a CLI running on another machine to restore sessions.
 
-开发支持 Node.js 22 和 24，默认使用 Node.js 24.22.0；pnpm 固定为 10.34.7，以根目录 `package.json` 的 `packageManager` 字段为准。以下命令从 monorepo 根目录执行：
+## Use the plugin
 
-```sh
-pnpm --filter @chlrc/paseo-ux typecheck
-pnpm --filter @chlrc/paseo-ux test
-paseo plugin install ./packages/paseo-ux
-paseo plugin reload paseo-ux
-```
+### Conversation media
 
-也可先在仓库根目录运行 `pnpm install --frozen-lockfile --ignore-scripts` 和 `pnpm check`。只需在对应 daemon 安装和重载插件。远端会话需要将插件安装到对应远端 daemon。本地部署不重启 daemon。更多说明见[根目录开发指南](../../README.md#开发)，本包变更记录见[CHANGELOG](CHANGELOG.md)。
+The Media composer entry appears after a metadata check finds attachments in the conversation. You can also open the panel with the Command Center attachment action or the /media command. Search by name or source, filter by media type, and load older history. The metadata check pages through conversation history so an empty newest page does not hide older attachments.
 
-## 实现边界
+Complete assistant and user messages containing only images are rendered as compact galleries through Paseo's timeline pipeline. Mixed text stays in Paseo's renderer. Select an image to open the full-screen viewer. The viewer supports previous and next navigation, zoom, pan, and reset. Source details and thumbnails are collapsed by default to leave more room for the image. Image gestures are enabled by default; navigation controls remain available when gestures are disabled.
 
-- `shared/`：图片引用识别、预览坐标变换、会话排序、Zod RPC 与设置契约。
-- `server/`：分页读取会话媒体目录、工作区历史；通过同一 daemon 安装附带的官方 CLI 恢复已关闭会话，并读回状态。仍运行的会话只返回打开目标。图片读取不接受任意路径输入。
-- `client/web.ts`：集中维护桌面/Web 图片布局、预览手势与快捷键适配；原生端为无操作。0.11.2 原生快捷键先在窗口捕获阶段执行，因此插件在当前工作区范围临时遮蔽恢复组合键，再处理恢复或转发新建终端操作。禁用/卸载恢复原按键访问器；不写入原生快捷键设置。
-- 当前支持默认 `Cmd+Shift+T` 绑定的 macOS 桌面客户端。新建菜单中的终端快捷键提示同步为 `Ctrl+反引号`；键盘快捷键设置对话框仍由 Paseo 显示原配置；若手工修改过“新建终端”绑定，需另行适配。恢复入口只列出 Paseo 保留的记录，不能找回已永久删除的会话或重建缺失的工作树。
-- 其他 `client/`：React Native 媒体面板、预览弹窗、设置与聊天按钮。
-- 首版支持图片。视频、音频暂未纳入。
-- 聊天内原图仍由 Paseo 管理加载；聚合减少展示高度，不承诺减少原生消息的网络请求。
-- 媒体面板只预览已挂载的可见网格单元，大图按点击加载。单张图片上限 16 MiB。
-- 原生 iOS/Android、远端 daemon、真实聊天内的点击/缩放尚需验收。
+The attachment panel shows image previews, lets you play supported local audio, and presents video, document, and file references as cards. HTTP(S) sources can be opened through Paseo's external URL handler. Local video, PDF, and other file contents are not downloaded or previewed in the plugin.
 
-## 宿主交互检查清单
+### Workspace sessions
 
-以下步骤定义在 Paseo 宿主中检查真实插件交互的范围，不是本次工作区的验收结果声明。真实客户端截图必须来自目标 Paseo 版本和设备的实际运行；本指南不使用合成页面充当客户端截图。
+Use the workspace header's Session button or the Command Center restore action to browse sessions in the current workspace. Search by session name or provider. Selecting a closed, persistent session reloads the same session ID; selecting a session that is already running opens it directly. The history list is limited to the selected workspace and the records retained by its daemon.
 
-1. 在含多张连续图片的回复中，检查总数、默认 3 张和 `+N`。
-2. 展开、收起，确认中间的正文、工具调用和用户消息隔开图片组。
-3. 点击预览，检查左右方向键切换、滚轮缩放、拖拽、双击复位；切换图片应恢复适应窗口。
-4. 打开“媒体”，检查当前会话隔离、搜索、更多历史和错误重试。
-5. 在浅色、暗色、窄窗口中查看。
-6. 关闭聊天内聚合，确认恢复原生图片，重新开启后再次聚合。
-7. 关闭一个会话，按 `Cmd+Shift+T`，确认恢复原 ID、历史和标题；重复操作应依次恢复其他关闭的会话。
-8. 按 `Ctrl+反引号`，确认只新建终端；新建菜单和“会话”入口应显示当前工作区历史，不混入其他工作区。
+### Settings
+
+Preferences are scoped to the selected host and apply to every device connected to that host:
+
+- Attachments enables media indexing and the composer entry.
+- Group image-only messages enables or disables gallery transformation.
+- Visible thumbnails sets the collapsed gallery count from 1 to 8. The default is 3.
+- Image gestures enables zoom, pan, and reset gestures. The default is on.
+- Session history enables the workspace session list and restore actions. The default is on.
+- Audio playback enables new playback requests for supported local audio. The default is on. Paseo exposes no stop control for an already playing clip.
+
+## Host interaction checks
+
+See [VALIDATION.md](VALIDATION.md) for evidence and remaining device checks, and the [component fixture guide](tests/browser/README.md) for repeatable browser scenarios. Fixture results do not prove native device behavior. Marketplace screenshots and publication are separate follow-up work.
+
+## Data access and limits
+
+The daemon finds media references in the selected conversation's public timeline and structured tool results. It does not scan workspace directories. Before reading local image or audio content, it confirms the source appears in that conversation's history. A referenced path can be outside the workspace and is read on the daemon host. Local image and supported audio reads are limited to 16 MiB per item. HTTP(S) resources are not fetched by the daemon; the client opens their original source through Paseo's external URL handler.
+
+The index follows the host's projected conversation history, including its merged messages and tool results. It covers references exposed in message text and tool details, rather than every raw event or separate attachment payload. Older tool details replaced by the host may no longer appear in this view.
+
+Native iOS and Android behavior has not been verified on real devices. The plugin does not send conversation content to an additional model; messages and tool results sent to an agent follow the selected provider's existing Paseo configuration.
+
+## Develop from this repository
+
+Run these commands from the repository root:
+
+    pnpm install --frozen-lockfile --ignore-scripts
+    pnpm hooks:install
+    pnpm --filter @chlrc/paseo-ux typecheck
+    pnpm --filter @chlrc/paseo-ux test
+
+The package uses the repository's pnpm workspace and lockfile. Install or reload the local plugin after changing code to pick up the new bundle.
+
+### Session restore configuration
+
+The plugin invokes the public CLI on the daemon host. It inspects the selected session ID and working directory before reloading, then reads the session back to confirm the same ID is active. The CLI executable defaults to paseo and must be available on the daemon host's PATH.
+
+- PASEO_HOME selects the daemon data directory and defaults to ~/.paseo.
+- PASEO_ESSENTIALS_CLI selects a standalone executable when paseo is not the desired binary.
+
+Set these variables in the daemon's environment. The plugin clears PASEO_HOST for the CLI call, so PASEO_HOME must point to the daemon that owns the conversation.

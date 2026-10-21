@@ -9,6 +9,38 @@
     "ignoreUnknown": true,
     "includes": ["**/*.{js,mjs,cjs,jsx,ts,tsx,json,jsonc}", "!**/npm-shrinkwrap.json"]
   },
+  "plugins": [
+    {
+      "path": "./lint/native-prototype.grit",
+      "includes": [
+        "**/client/**",
+        "**/server/**",
+        "**/shared/**",
+        "**/index.client.*",
+        "**/index.server.*",
+        "!**/tests/**"
+      ]
+    },
+    {
+      "path": "./lint/public-sdk.grit",
+      "includes": [
+        "**/client/**",
+        "**/server/**",
+        "**/shared/**",
+        "**/index.client.*",
+        "**/index.server.*",
+        "!**/tests/**"
+      ]
+    },
+    {
+      "path": "./lint/native-jsx.grit",
+      "includes": ["**/client/**", "**/index.client.*", "!**/tests/**", "!**/client/web.ts"]
+    },
+    {
+      "path": "./lint/native-jsx-props.grit",
+      "includes": ["**/client/**", "**/index.client.*", "!**/tests/**", "!**/client/web.ts"]
+    }
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -37,6 +69,365 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "packages/*/client/**/*.js",
+        "packages/*/client/**/*.jsx",
+        "packages/*/client/**/*.ts",
+        "packages/*/client/**/*.tsx",
+        "packages/*/index.client.js",
+        "packages/*/index.client.jsx",
+        "packages/*/index.client.ts",
+        "packages/*/index.client.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "error"
+          },
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Client code must not depend on Node.js globals.",
+                  "Buffer": "Client code must not depend on Node.js globals.",
+                  "__filename": "Client code must not depend on Node.js globals.",
+                  "__dirname": "Client code must not depend on Node.js globals.",
+                  "global": "Client code must not depend on Node.js globals.",
+                  "require": "Client code must use public, environment-appropriate imports.",
+                  "module": "Client code must not depend on Node.js globals.",
+                  "setImmediate": "Client code must not depend on Node.js globals.",
+                  "clearImmediate": "Client code must not depend on Node.js globals."
+                }
+              }
+            },
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@getpaseo/plugin/client/host": {
+                    "message": "The host SDK adapter is test-only; runtime code must use public SDK entrypoints."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": [
+                      "@getpaseo/**/dist",
+                      "@getpaseo/**/dist/**",
+                      "@getpaseo/**/src",
+                      "@getpaseo/**/src/**",
+                      "@getpaseo/**/internal",
+                      "@getpaseo/**/internal/**",
+                      "@getpaseo/**/private",
+                      "@getpaseo/**/private/**",
+                      "@getpaseo/plugin/client/host/**",
+                      "@getpaseo/plugin/_internal/**",
+                      "@getpaseo/plugin/_private/**",
+                      "@getpaseo/plugin/server",
+                      "@getpaseo/plugin/server/**",
+                      "./server",
+                      "./server/**",
+                      "../server",
+                      "../server/**",
+                      "../../server",
+                      "../../server/**",
+                      "../../../server",
+                      "../../../server/**",
+                      "../../../../server",
+                      "../../../../server/**",
+                      "@/server",
+                      "@/server/**"
+                    ],
+                    "message": "Client code must use public client SDK APIs and must not import server modules or private SDK paths."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "packages/*/server/**/*.js",
+        "packages/*/server/**/*.jsx",
+        "packages/*/server/**/*.ts",
+        "packages/*/server/**/*.tsx",
+        "packages/*/index.server.js",
+        "packages/*/index.server.jsx",
+        "packages/*/index.server.ts",
+        "packages/*/index.server.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@getpaseo/plugin/client/host": {
+                    "message": "The host SDK adapter is test-only; runtime code must use public SDK entrypoints."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": [
+                      "@getpaseo/**/dist",
+                      "@getpaseo/**/dist/**",
+                      "@getpaseo/**/src",
+                      "@getpaseo/**/src/**",
+                      "@getpaseo/**/internal",
+                      "@getpaseo/**/internal/**",
+                      "@getpaseo/**/private",
+                      "@getpaseo/**/private/**",
+                      "@getpaseo/plugin/client/host/**",
+                      "@getpaseo/plugin/_internal/**",
+                      "@getpaseo/plugin/_private/**",
+                      "@getpaseo/plugin/client",
+                      "@getpaseo/plugin/client/**",
+                      "./client",
+                      "./client/**",
+                      "../client",
+                      "../client/**",
+                      "../../client",
+                      "../../client/**",
+                      "../../../client",
+                      "../../../client/**",
+                      "../../../../client",
+                      "../../../../client/**",
+                      "@/client",
+                      "@/client/**"
+                    ],
+                    "message": "Server code must not import client modules or private SDK paths."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "packages/*/shared/**/*.js",
+        "packages/*/shared/**/*.jsx",
+        "packages/*/shared/**/*.ts",
+        "packages/*/shared/**/*.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "error"
+          },
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Shared code must not depend on Node.js globals.",
+                  "Buffer": "Shared code must not depend on Node.js globals.",
+                  "__filename": "Shared code must not depend on Node.js globals.",
+                  "__dirname": "Shared code must not depend on Node.js globals.",
+                  "global": "Shared code must not depend on Node.js globals.",
+                  "require": "Shared code must use environment-independent imports.",
+                  "module": "Shared code must not depend on Node.js globals.",
+                  "setImmediate": "Shared code must not depend on Node.js globals.",
+                  "clearImmediate": "Shared code must not depend on Node.js globals."
+                }
+              }
+            },
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "@getpaseo/plugin/client/host": {
+                    "message": "The host SDK adapter is test-only; runtime code must use public SDK entrypoints."
+                  },
+                  "react": {
+                    "message": "Shared modules must contain environment-independent contracts and logic."
+                  },
+                  "react-native": {
+                    "message": "Shared modules must contain environment-independent contracts and logic."
+                  },
+                  "react-dom": {
+                    "message": "Shared modules must contain environment-independent contracts and logic."
+                  },
+                  "@tanstack/react-query": {
+                    "message": "Shared modules must contain environment-independent contracts and logic."
+                  }
+                },
+                "patterns": [
+                  {
+                    "group": [
+                      "@getpaseo/**/dist",
+                      "@getpaseo/**/dist/**",
+                      "@getpaseo/**/src",
+                      "@getpaseo/**/src/**",
+                      "@getpaseo/**/internal",
+                      "@getpaseo/**/internal/**",
+                      "@getpaseo/**/private",
+                      "@getpaseo/**/private/**",
+                      "@getpaseo/plugin/client/host/**",
+                      "@getpaseo/plugin/_internal/**",
+                      "@getpaseo/plugin/_private/**",
+                      "@getpaseo/plugin/client",
+                      "@getpaseo/plugin/client/**",
+                      "@getpaseo/plugin/server",
+                      "@getpaseo/plugin/server/**",
+                      "./client",
+                      "./client/**",
+                      "../client",
+                      "../client/**",
+                      "../../client",
+                      "../../client/**",
+                      "../../../client",
+                      "../../../client/**",
+                      "../../../../client",
+                      "../../../../client/**",
+                      "./server",
+                      "./server/**",
+                      "../server",
+                      "../server/**",
+                      "../../server",
+                      "../../server/**",
+                      "../../../server",
+                      "../../../server/**",
+                      "../../../../server",
+                      "../../../../server/**",
+                      "@/client",
+                      "@/client/**",
+                      "@/server",
+                      "@/server/**"
+                    ],
+                    "message": "Shared code must remain environment-independent and must not import client/server modules or private SDK paths."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/client/**", "**/index.client.*", "!**/client/web.ts", "!**/tests/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Native plugin code client code must not depend on Node.js globals.",
+                  "Buffer": "Native plugin code client code must not depend on Node.js globals.",
+                  "__filename": "Native plugin code client code must not depend on Node.js globals.",
+                  "__dirname": "Native plugin code client code must not depend on Node.js globals.",
+                  "global": "Native plugin code client code must not depend on Node.js globals.",
+                  "require": "Native plugin code client code must use public, environment-appropriate imports.",
+                  "module": "Native plugin code client code must not depend on Node.js globals.",
+                  "setImmediate": "Native plugin code client code must not depend on Node.js globals.",
+                  "clearImmediate": "Native plugin code client code must not depend on Node.js globals.",
+                  "document": "Native plugin code is native-only and must not access host DOM globals.",
+                  "window": "Native plugin code is native-only; use React Native APIs such as useWindowDimensions().",
+                  "globalThis": "Native plugin code is native-only and must not access host globals through globalThis.",
+                  "HTMLElement": "Native plugin code must use React Native UI primitives, not browser DOM types.",
+                  "HTMLDivElement": "Native plugin code must use React Native UI primitives, not browser DOM types.",
+                  "Element": "Native plugin code must use React Native UI primitives, not browser DOM types.",
+                  "Node": "Native plugin code must use React Native UI primitives, not browser DOM types.",
+                  "Document": "Native plugin code must use React Native UI primitives, not browser DOM types.",
+                  "MutationObserver": "Native plugin code must use React Native APIs, not browser DOM APIs.",
+                  "ResizeObserver": "Native plugin code must use React Native APIs, not browser DOM APIs.",
+                  "IntersectionObserver": "Native plugin code must use React Native APIs, not browser DOM APIs.",
+                  "DOMParser": "Native plugin code must use React Native APIs, not browser DOM APIs.",
+                  "ShadowRoot": "Native plugin code must use React Native APIs, not browser DOM APIs.",
+                  "KeyboardEvent": "Native plugin code must use React Native event APIs, not browser DOM events.",
+                  "MouseEvent": "Native plugin code must use React Native event APIs, not browser DOM events.",
+                  "PointerEvent": "Native plugin code must use React Native event APIs, not browser DOM events.",
+                  "TouchEvent": "Native plugin code must use React Native event APIs, not browser DOM events.",
+                  "EventTarget": "Native plugin code must use React Native event APIs, not browser DOM events.",
+                  "addEventListener": "Native plugin code must not register global browser event listeners.",
+                  "removeEventListener": "Native plugin code must not manage global browser event listeners.",
+                  "navigator": "Native client code must use public React Native APIs instead of browser globals.",
+                  "localStorage": "Native client code must use public React Native APIs instead of browser globals.",
+                  "sessionStorage": "Native client code must use public React Native APIs instead of browser globals.",
+                  "location": "Native client code must use public React Native APIs instead of browser globals.",
+                  "history": "Native client code must use public React Native APIs instead of browser globals.",
+                  "screen": "Native client code must use public React Native APIs instead of browser globals.",
+                  "getComputedStyle": "Native client code must use public React Native APIs instead of browser globals.",
+                  "matchMedia": "Native client code must use public React Native APIs instead of browser globals.",
+                  "HTMLImageElement": "Native client code must use public React Native APIs instead of browser globals."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "packages/paseo-ux/client/**/*.js",
+        "packages/paseo-ux/client/**/*.jsx",
+        "packages/paseo-ux/client/**/*.ts",
+        "packages/paseo-ux/client/**/*.tsx",
+        "packages/paseo-ux/index.client.js",
+        "packages/paseo-ux/index.client.jsx",
+        "packages/paseo-ux/index.client.ts",
+        "packages/paseo-ux/index.client.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Essentials client code must not depend on Node.js globals.",
+                  "Buffer": "Essentials client code must not depend on Node.js globals.",
+                  "__filename": "Essentials client code must not depend on Node.js globals.",
+                  "__dirname": "Essentials client code must not depend on Node.js globals.",
+                  "global": "Essentials client code must not depend on Node.js globals.",
+                  "require": "Essentials client code must use public, environment-appropriate imports.",
+                  "module": "Essentials client code must not depend on Node.js globals.",
+                  "setImmediate": "Essentials client code must not depend on Node.js globals.",
+                  "clearImmediate": "Essentials client code must not depend on Node.js globals.",
+                  "document": "Essentials is native-only and must not access host DOM globals.",
+                  "window": "Essentials is native-only; use React Native APIs such as useWindowDimensions().",
+                  "globalThis": "Essentials is native-only and must not access host globals through globalThis.",
+                  "HTMLElement": "Essentials must use React Native UI primitives, not browser DOM types.",
+                  "HTMLDivElement": "Essentials must use React Native UI primitives, not browser DOM types.",
+                  "Element": "Essentials must use React Native UI primitives, not browser DOM types.",
+                  "Node": "Essentials must use React Native UI primitives, not browser DOM types.",
+                  "Document": "Essentials must use React Native UI primitives, not browser DOM types.",
+                  "MutationObserver": "Essentials must use React Native APIs, not browser DOM APIs.",
+                  "ResizeObserver": "Essentials must use React Native APIs, not browser DOM APIs.",
+                  "IntersectionObserver": "Essentials must use React Native APIs, not browser DOM APIs.",
+                  "DOMParser": "Essentials must use React Native APIs, not browser DOM APIs.",
+                  "ShadowRoot": "Essentials must use React Native APIs, not browser DOM APIs.",
+                  "KeyboardEvent": "Essentials must use React Native event APIs, not browser DOM events.",
+                  "MouseEvent": "Essentials must use React Native event APIs, not browser DOM events.",
+                  "PointerEvent": "Essentials must use React Native event APIs, not browser DOM events.",
+                  "TouchEvent": "Essentials must use React Native event APIs, not browser DOM events.",
+                  "EventTarget": "Essentials must use React Native event APIs, not browser DOM events.",
+                  "addEventListener": "Essentials must not register global browser event listeners.",
+                  "removeEventListener": "Essentials must not manage global browser event listeners.",
+                  "navigator": "Native client code must use public React Native APIs instead of browser globals.",
+                  "localStorage": "Native client code must use public React Native APIs instead of browser globals.",
+                  "sessionStorage": "Native client code must use public React Native APIs instead of browser globals.",
+                  "location": "Native client code must use public React Native APIs instead of browser globals.",
+                  "history": "Native client code must use public React Native APIs instead of browser globals.",
+                  "screen": "Native client code must use public React Native APIs instead of browser globals.",
+                  "getComputedStyle": "Native client code must use public React Native APIs instead of browser globals.",
+                  "matchMedia": "Native client code must use public React Native APIs instead of browser globals.",
+                  "HTMLImageElement": "Native client code must use public React Native APIs instead of browser globals."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {
