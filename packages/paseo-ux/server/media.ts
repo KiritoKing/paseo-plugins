@@ -150,7 +150,7 @@ function timelineReferences(item: {
   return [];
 }
 
-function assertCanonicalPage(
+function assertTimelinePage(
   page: {
     projection?: string;
     epoch: string;
@@ -160,8 +160,11 @@ function assertCanonicalPage(
   },
   cursor?: MediaCursor,
 ) {
-  if (page.projection !== "canonical")
-    throw new Error("会话历史暂不可用：媒体索引需要 canonical timeline。");
+  // Media browsing follows the same public projection as the conversation UI.
+  // 0.12 returns projected rows even for a canonical request. Keep every page
+  // and read on one explicit projection so their epoch/cursors stay comparable.
+  if (page.projection !== "projected")
+    throw new Error("Conversation history format is unsupported. Refresh attachments to retry.");
   if (cursor && (page.epoch !== cursor.epoch || page.reset || page.staleCursor || page.gap)) {
     throw new Error("会话历史已更新，请刷新媒体列表后重试。");
   }
@@ -174,7 +177,7 @@ async function conversationDirectory(
 ) {
   const cached = page.agent?.cwd ?? ref.cwd;
   if (cached) return cached;
-  // Canonical pages may omit the agent snapshot. A fresh handle has no cached
+  // Timeline pages may omit the agent snapshot. A fresh handle has no cached
   // cwd; fetch it through the public SDK rather than guessing a local directory.
   const current = await ref.refresh();
   if (!current?.agent.cwd)
@@ -190,11 +193,11 @@ export async function loadMedia(
   const page = await ref.timeline.refetch({
     direction: input.cursor ? "before" : "tail",
     limit: PAGE_SIZE,
-    projection: "canonical",
+    projection: "projected",
     ...(input.cursor ? { cursor: input.cursor } : {}),
   });
   if (page.error) throw new Error(page.error);
-  assertCanonicalPage(page, input.cursor);
+  assertTimelinePage(page, input.cursor);
   const cwd = await conversationDirectory(ref, page);
   const epoch = page.epoch;
   let catalog = catalogs.get(input.agentId);
@@ -229,7 +232,7 @@ export async function loadMedia(
               : "assistant",
         seq: entry.seqStart,
       };
-      // Keep the first canonical occurrence already seen for a resource so older
+      // Keep the first timeline occurrence already seen for a resource so older
       // pages add history without replacing its original timeline provenance.
       if (!catalog.assets.has(id))
         catalog.assets.set(id, { ...publicAsset, source: reference.source });
@@ -340,10 +343,10 @@ export async function readAsset(
   const current = await ref.timeline.refetch({
     direction: "tail",
     limit: 1,
-    projection: "canonical",
+    projection: "projected",
   });
   if (current.error) throw new Error(current.error);
-  assertCanonicalPage(current);
+  assertTimelinePage(current);
   if (
     current.epoch !== catalog.epoch ||
     catalogs.get(input.agentId) !== catalog ||
@@ -360,7 +363,7 @@ export async function readAsset(
   return readReference(reference, catalog.cwd);
 }
 
-/** Resolve and read an exact source only after finding it in the agent's canonical history. */
+/** Resolve and read an exact source only after finding it in the agent's timeline history. */
 export async function readReferencedAsset(
   input: RpcInput<typeof resolveMedia>,
   { paseo }: PluginHandlerContext,
@@ -375,11 +378,11 @@ export async function readReferencedAsset(
     const page = await ref.timeline.refetch({
       direction: cursor ? "before" : "tail",
       limit: PAGE_SIZE,
-      projection: "canonical",
+      projection: "projected",
       ...(cursor ? { cursor } : {}),
     });
     if (page.error) throw new Error(page.error);
-    assertCanonicalPage(page, cursor);
+    assertTimelinePage(page, cursor);
     if (epoch !== undefined && page.epoch !== epoch)
       throw new Error("会话历史版本已变化，无法安全解析附件。");
     if (!cursor && page.gap) throw new Error("会话历史不完整，无法安全解析附件。");
@@ -394,7 +397,7 @@ export async function readReferencedAsset(
         return readReference(match, cwd);
       }
     }
-    if (!page.hasOlder) throw new Error("该来源不在此会话的 canonical 历史中。");
+    if (!page.hasOlder) throw new Error("该来源不在此会话的历史中。");
     if (scanned >= MAX_RESOLVE_ENTRIES || pageNumber + 1 >= MAX_RESOLVE_PAGES) {
       throw new Error(`历史搜索超过 ${MAX_RESOLVE_ENTRIES} 条媒体记录的安全边界。`);
     }

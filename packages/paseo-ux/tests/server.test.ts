@@ -22,11 +22,12 @@ function timelinePage(options: {
   reset?: boolean;
   staleCursor?: boolean;
   gap?: boolean;
+  projection?: "canonical" | "projected";
 }) {
   const epoch = options.epoch ?? "epoch-1";
   const cursor = (seq: number | null) => (seq === null ? null : { epoch, seq });
   return {
-    projection: "canonical",
+    projection: options.projection ?? "projected",
     epoch,
     reset: options.reset ?? false,
     staleCursor: options.staleCursor ?? false,
@@ -66,7 +67,121 @@ function contextFor(pages: unknown[], cwd: string | null = "/tmp") {
   return { context: context as never, requests };
 }
 
-test("media listing pages only canonical timeline entries and keeps first source metadata when older pages repeat it", async () => {
+test("the 0.12 projected history contract supports every media read path", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "paseo-essentials-projected-"));
+  catalogs.clear();
+  try {
+    const bytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jB1sAAAAASUVORK5CYII=",
+      "base64",
+    );
+    const source = join(dir, "attachment.png");
+    await writeFile(source, bytes);
+    const page = timelinePage({
+      projection: "projected",
+      cwd: dir,
+      start: 1,
+      end: 1,
+      entries: [{ item: { type: "user_message", text: `![image](${source})` }, seqStart: 1 }],
+    });
+    const { context, requests } = contextFor([page, page, page], dir);
+    const result = await loadMedia({ agentId: "projected-agent" }, context);
+    assert.equal(result.assets.length, 1);
+    assert.equal(
+      (await readAsset({ agentId: "projected-agent", assetId: result.assets[0]!.id }, context))
+        .bytes,
+      bytes.length,
+    );
+    assert.equal(
+      (await readReferencedAsset({ agentId: "projected-agent", source }, context)).uri,
+      `data:image/png;base64,${bytes.toString("base64")}`,
+    );
+    assert.deepEqual(
+      requests.map((request) => request.projection),
+      ["projected", "projected", "projected"],
+    );
+  } finally {
+    catalogs.clear();
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("every media path rejects an unexpected or missing projection", async () => {
+  const source = "https://example.com/attachment.png";
+  for (const projection of [undefined, "canonical", "unknown"]) {
+    catalogs.clear();
+    const page = timelinePage({
+      entries: [{ item: { type: "assistant_message", text: `![image](${source})` }, seqStart: 1 }],
+    });
+    const { assets } = await loadMedia({ agentId: "projection-agent" }, contextFor([page]).context);
+    const unexpected = { ...page, projection };
+    await assert.rejects(
+      () => loadMedia({ agentId: "projection-agent" }, contextFor([unexpected]).context),
+      /history format is unsupported/,
+    );
+    await assert.rejects(
+      () =>
+        readAsset(
+          { agentId: "projection-agent", assetId: assets[0]!.id },
+          contextFor([unexpected]).context,
+        ),
+      /history format is unsupported/,
+    );
+    await assert.rejects(
+      () =>
+        readReferencedAsset(
+          { agentId: "projection-agent", source },
+          contextFor([unexpected]).context,
+        ),
+      /history format is unsupported/,
+    );
+  }
+  catalogs.clear();
+});
+
+test("projected pagination retains epoch, reset, stale-cursor and gap guards", async () => {
+  const source = "https://example.com/attachment.png";
+  for (const invalid of [
+    { epoch: "replaced-epoch" },
+    { reset: true },
+    { staleCursor: true },
+    { gap: true },
+  ]) {
+    const page = timelinePage({
+      start: 2,
+      entries: [{ item: { type: "assistant_message", text: `![image](${source})` }, seqStart: 2 }],
+      ...invalid,
+    });
+    await assert.rejects(
+      () =>
+        loadMedia(
+          { agentId: "page-guard-agent", cursor: { epoch: "epoch-1", seq: 10 } },
+          contextFor([page]).context,
+        ),
+      /历史已更新/,
+    );
+    await assert.rejects(
+      () =>
+        readReferencedAsset(
+          { agentId: "page-guard-agent", source },
+          contextFor([timelinePage({ start: 10, hasOlder: true }), page]).context,
+        ),
+      /历史已更新/,
+    );
+  }
+  for (const operation of [loadMedia, readReferencedAsset]) {
+    await assert.rejects(
+      () =>
+        operation(
+          { agentId: "gap-agent", source },
+          contextFor([timelinePage({ gap: true })]).context,
+        ),
+      /历史不完整/,
+    );
+  }
+});
+
+test("media listing pages only projected timeline entries and keeps first source metadata when older pages repeat it", async () => {
   catalogs.clear();
   const newer = timelinePage({
     start: 20,
@@ -127,7 +242,7 @@ test("media listing pages only canonical timeline entries and keeps first source
     assert.equal(second.hasOlder, false);
     assert.equal(requests.length, 2);
     assert.equal(requests[0]?.direction, "tail");
-    assert.equal(requests[0]?.projection, "canonical");
+    assert.equal(requests[0]?.projection, "projected");
     assert.equal(requests[1]?.direction, "before");
     assert.deepEqual(requests[1]?.cursor, first.cursor);
   } finally {
@@ -135,7 +250,7 @@ test("media listing pages only canonical timeline entries and keeps first source
   }
 });
 
-test("listing rejects a cursor from a replaced canonical timeline epoch", async () => {
+test("listing rejects a cursor from a replaced timeline epoch", async () => {
   catalogs.clear();
   const { context } = contextFor([timelinePage({ epoch: "epoch-2", start: 4, entries: [] })]);
   await assert.rejects(
@@ -247,7 +362,7 @@ test("bounds image and portable audio reads, verifies exact readback, and reject
   }
 });
 
-test("readReferencedAsset searches earlier canonical pages before authorizing an exact source", async () => {
+test("readReferencedAsset searches earlier timeline pages before authorizing an exact source", async () => {
   const dir = await mkdtemp(join(tmpdir(), "paseo-essentials-resolve-"));
   catalogs.clear();
   try {
@@ -325,7 +440,7 @@ test("readReferencedAsset rejects unlisted sources, replaced epochs, and non-adv
   );
 });
 
-test("canonical history without an agent snapshot resolves cwd through the public agent handle", async () => {
+test("timeline history without an agent snapshot resolves cwd through the public agent handle", async () => {
   catalogs.clear();
   const source = "https://example.com/sample.png";
   const page = {
@@ -346,7 +461,7 @@ test("canonical history without an agent snapshot resolves cwd through the publi
   catalogs.clear();
 });
 
-test("a cached attachment is refused after canonical history replacement", async () => {
+test("a cached attachment is refused after timeline history replacement", async () => {
   catalogs.clear();
   const source = "https://example.com/old.png";
   const indexed = timelinePage({

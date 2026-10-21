@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix media indexing and reads on Paseo 0.12.0 by consistently requesting its public projected timeline. Keep epoch, cursor, gap, conversation-source authorization and file-size checks; unexpected projections still fail closed.
 - Display the plugin as **Paseo Essentials** while preserving `paseo-ux`, `@chlrc/paseo-ux`, the Git package path, and the `media` settings identity for existing installations.
 - Replace host DOM scanning, injected menus, keyboard prototype patches, and private CLI-module resolution with public Paseo and React Native APIs. Complete image-only messages use timeline contributions; mixed text and streaming messages retain host rendering.
 - Add independent feature controls with migrated preferences and server-side gates. Hide the automatic attachment entry until an attachment is found, including older canonical history.

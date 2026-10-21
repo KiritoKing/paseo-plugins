@@ -1,4 +1,19 @@
-# 0.3.0 候选验证
+# Paseo 0.12.0 媒体历史修复
+
+日期：2026-10-21；修复基线为候选提交 `58b21812dfa04ab331e8fbd7284202ebdf334c7c`，当前修复见本记录所属的 PR 提交。
+
+旧候选能启动，但真实媒体请求失败：0.12.0 daemon 对显式的 `projection: "canonical"` 请求仍返回 `projected`。公开 SDK 直连复现与 [0.12.0 handler 源码](https://github.com/getpaseo/paseo/blob/v0.12.0/packages/server/src/server/session.ts#L7727-L7814) 一致。原测试手写了 canonical 响应，没有覆盖宿主真实提供的投影；`running` 不能作为媒体功能验收。
+
+媒体列表、缓存读取复核和图片来源解析现在统一请求并校验 `projected`。epoch、游标、reset、stale cursor、gap、会话来源 allowlist、大小上限与精确来源搜索继续有效；不接受未识别的投影。此索引表示宿主公开会话视图中暴露的引用，不代表完整原始事件档案，也不覆盖该视图未暴露的独立附件 payload。
+
+- Node 24.22.0、pnpm 10.34.7，最低 SDK 0.11.2 的类型检查通过。
+- 新测试先复现同一 canonical 错误，修复后 Essentials 46 项测试通过；新增覆盖三条读取路径、投影不匹配与已有分页失效边界。
+- 完整 `pnpm check` 通过，共 118 项测试（Essentials 46、AIW 14、工程 58），包括浏览器构建和三个包的隔离安装/入口编译。
+- 实际 Desktop app 与 daemon 均为 0.12.0。在临时验证插件中使用同一生产媒体代码，通过真实客户端 `client.rpc` 发起历史查询、本地图片缓存读取及精确来源读取，返回数据经客户端解码后再次回传确认，两条读取路径的字节结果一致。未保存真实会话内容、路径或验证回执到仓库。
+
+上述真实 RPC 验证不代替完整桌面交互、iOS/Android 设备或市场截图验收。最终安装版本和远端 CI 在交付时另外读回；下方保留首次候选的历史证据，不能覆盖本节的新合约。
+
+# 0.3.0 初始候选验证
 
 日期：2026-10-20。范围：Paseo Essentials 候选代码；保留 `paseo-ux` 身份、包路径及 `media` 设置。工程基线为 `origin/main` 的 `1cbbbb20ee0c736afffda9d1cc6737b3177844cc`。本记录不代表发布、市场审核或所有声明版本/设备均已验收。
 

@@ -49,7 +49,9 @@ See [VALIDATION.md](VALIDATION.md) for evidence and remaining device checks, and
 
 ## Data access and limits
 
-The daemon finds media references in the selected conversation's canonical timeline and structured tool results. It does not scan workspace directories. Before reading local image or audio content, it confirms the source appears in that conversation's history. A referenced path can be outside the workspace and is read on the daemon host. Local image and supported audio reads are limited to 16 MiB per item. HTTP(S) resources are not fetched by the daemon; the client opens their original source through Paseo's external URL handler.
+The daemon finds media references in the selected conversation's public timeline and structured tool results. It does not scan workspace directories. Before reading local image or audio content, it confirms the source appears in that conversation's history. A referenced path can be outside the workspace and is read on the daemon host. Local image and supported audio reads are limited to 16 MiB per item. HTTP(S) resources are not fetched by the daemon; the client opens their original source through Paseo's external URL handler.
+
+The index follows the host's projected conversation history, including its merged messages and tool results. It covers references exposed in message text and tool details, rather than every raw event or separate attachment payload. Older tool details replaced by the host may no longer appear in this view.
 
 Native iOS and Android behavior has not been verified on real devices. The plugin does not send conversation content to an additional model; messages and tool results sent to an agent follow the selected provider's existing Paseo configuration.
 

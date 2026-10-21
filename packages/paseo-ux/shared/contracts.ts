@@ -64,8 +64,8 @@ export const readMedia = defineRpc({
   input: z.object({ agentId: z.string().min(1), assetId: z.string().min(1) }),
   output: mediaReadSchema,
 });
-// Inline galleries supply a source, but the server must find it in canonical
-// conversation history before reading a local file. This is not a path-read RPC.
+// Inline galleries supply a source, but the server must find it in the selected
+// conversation's public timeline before reading a local file. This is not a path-read RPC.
 export const resolveMedia = defineRpc({
   name: "media.resolve",
   input: z.object({ agentId: z.string().min(1), source: z.string().min(1).max(24_000_000) }),
