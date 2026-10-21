@@ -7,7 +7,7 @@ corepack pnpm fixtures:build
 corepack pnpm fixtures:serve
 ```
 
-打开 `http://127.0.0.1:8769/aiw-panel.html`。刷新页面后执行 `await window.runAiwChecks()`，预期通过 22 项断言。手动按钮可切换宽窄布局、主题、名称设置与插件重载；底部 trace 显示合成 RPC 输入。
+打开 `http://127.0.0.1:8769/aiw-panel.html`。刷新页面后点击“运行回归”（也可执行 `await window.runAiwChecks()`），预期通过 22 项断言。手动按钮可切换宽窄布局、主题、名称设置与插件重载；底部 trace 显示合成 RPC 输入。
 
 测试运行真实的插件入口、业务仓面板、搜索、阅读器、名称设置与导航组件。React Native/UI 原语和数据是测试替身；使用 SDK 的真实 RPC 验证和工作区上下文，settings 使用带 schema 与 revision 检查的内存替身，因为 npm SDK 只声明 `useSettings`，运行实现由 Paseo 宿主提供。图标为简化占位，不用于像素验收。
 

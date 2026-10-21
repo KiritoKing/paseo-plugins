@@ -190,6 +190,7 @@ const client = {
 };
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 function Fixture() {
+  const [checkResult, setCheckResult] = useState(null);
   const [, render] = useState(0),
     [dark, setDark] = useState(false),
     [width, setWidth] = useState(1100),
@@ -234,6 +235,19 @@ function Fixture() {
         >
           搜索命令
         </button>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              setCheckResult(await runChecks());
+            } catch (error) {
+              setCheckResult({ error: error.message });
+            }
+          }}
+        >
+          运行回归
+        </button>
+        <output aria-label="回归结果">{checkResult ? JSON.stringify(checkResult) : ""}</output>
         <span id="registration">
           {registeredPanel?.title} · {registeredPanel ? 1 : 0} 个面板 · {headers.length} 个入口
         </span>

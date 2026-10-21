@@ -32,9 +32,24 @@ export async function runChecks() {
     passed.push(name);
   };
   const search = async (text) => {
+    const requestsBefore = trace().filter((item) => item.method === "aiw.search").length;
     await fill("搜索文本", text);
     find("搜索文本").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-    await frame();
+    await waitFor(() => {
+      const requests = trace().filter((item) => item.method === "aiw.search");
+      if (requests.length <= requestsBefore) return false;
+      const latest = requests.at(-1);
+      if (latest?.input.query !== text || document.body.textContent.includes("正在跨仓搜索…"))
+        return false;
+      if (text === "empty") return document.body.textContent.includes("没有匹配结果");
+      if (text === "error") return document.body.textContent.includes("无效的正则表达式");
+      if (text === "partial")
+        return (
+          document.body.textContent.includes("结果已截断") &&
+          document.body.textContent.includes("仓库不可读取")
+        );
+      return !!find("打开 前端 src/main.ts 第 42 行");
+    });
   };
   await waitFor(() =>
     document.querySelector("#registration").textContent.includes("1 个面板 · 1 个入口"),
