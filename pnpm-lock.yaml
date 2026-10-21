@@ -17,6 +17,9 @@ importers:
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
+      react-native-web:
+        specifier: 0.21.4
+        version: 0.21.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       semver:
         specifier: 7.8.5
         version: 7.8.5
@@ -120,6 +123,7 @@ importers:
       zod:
         specifier: ^4.4.3
         version: 4.6.7
+
 
 packages:
 

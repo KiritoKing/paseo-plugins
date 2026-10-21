@@ -9,20 +9,14 @@ import { build } from "esbuild";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const output = resolve(root, "work/browser");
 const input = resolve(root, "packages/paseo-ux/tests/browser");
+const packageRequire = createRequire(resolve(input, "../../package.json"));
 const fixtures = [
-  { name: "fixture", entry: "fixture.ts", native: "native-stub.ts" },
-  { name: "controls", entry: "controls.ts", native: "native-stub.ts" },
+  { name: "essentials", entry: "essentials.tsx", native: "react-native-web" },
   {
     name: "session-screen",
     entry: "session-screen.jsx",
     native: "screen-native.jsx",
     ui: "screen-ui.jsx",
-  },
-  {
-    name: "image-navigation",
-    entry: "image-navigation.jsx",
-    native: "screen-native.jsx",
-    ui: "image-ui.jsx",
   },
   {
     name: "conversation-ui",
@@ -43,10 +37,22 @@ for (const fixture of fixtures) {
     outfile: resolve(output, `${fixture.name}.js`),
     bundle: true,
     platform: "browser",
+    define: { "process.env.NODE_ENV": '"development"' },
     alias: {
       "react-native": fixture.nativeModule
         ? fixtureRequire.resolve(fixture.nativeModule)
-        : resolve(source, fixture.native),
+        : fixture.native === "react-native-web"
+          ? dirname(fileURLToPath(import.meta.resolve("react-native-web/package.json")))
+          : resolve(source, fixture.native),
+      ...(fixture.name === "essentials"
+        ? {
+            react: dirname(packageRequire.resolve("react/package.json")),
+            "react-dom": dirname(packageRequire.resolve("react-dom/package.json")),
+            "@getpaseo/plugin/client": resolve(input, "essentials-host.tsx"),
+            "@getpaseo/plugin/client/ui": resolve(input, "essentials-host.tsx"),
+            "@getpaseo/plugin/client/react-native": resolve(input, "essentials-host.tsx"),
+          }
+        : {}),
       ...(fixture.ui
         ? { "@getpaseo/plugin/client/react-native": resolve(source, fixture.ui) }
         : {}),
@@ -70,9 +76,6 @@ for (const fixture of fixtures) {
       : {}),
   });
 }
-const controls = resolve(output, "h/fixture-host/workspace/fixture-workspace/index.html");
-await mkdir(dirname(controls), { recursive: true });
-await copyFile(resolve(output, "controls.html"), controls);
 console.log(`Built ${fixtures.length} browser fixtures in work/browser.`);
 
 if (process.argv.includes("--serve")) {
@@ -111,7 +114,7 @@ if (process.argv.includes("--serve")) {
     process.exitCode = 1;
   });
   server.listen(port, "127.0.0.1", () => {
-    console.log(`Fixtures: http://127.0.0.1:${port}/fixture.html (Ctrl+C to stop)`);
+    console.log(`Fixtures: http://127.0.0.1:${port}/essentials.html (Ctrl+C to stop)`);
   });
   for (const signal of ["SIGINT", "SIGTERM"]) {
     process.once(signal, () => server.close());

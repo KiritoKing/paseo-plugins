@@ -1,21 +1,24 @@
 # 浏览器夹具
 
-这些独立页面把项目中的图片聚合、手势、会话恢复和菜单控制模块放进可重复的浏览器场景。它们使用合成内容以及模拟的 Paseo UI、RPC 或原生事件，不连接真实 Paseo 客户端、daemon、工作区或会话，也不能替代宿主内的真实交互检查。
+夹具使用合成会话与模拟的 Paseo RPC、设置和导航上下文。`essentials.html` 加载实际生产入口、附件面板、设置页、图片组与查看器，UI 原语来自真实 React Native Web；`session-screen.html` 覆盖既有会话选择流程。它们不连接真实会话，不恢复用户会话，也不替代 Paseo 宿主与原生设备验收。
 
-所有命令都从仓库根目录执行。先构建夹具，再启动本地静态服务：
+从仓库根目录执行：
 
 ```sh
 pnpm fixtures:build
 pnpm fixtures:serve
 ```
 
-服务默认绑定 `127.0.0.1:8769`。在浏览器中打开下列页面：
+打开 `http://127.0.0.1:8769/essentials.html` 或 `http://127.0.0.1:8769/session-screen.html`。服务没有热更新，修改源码后重新构建并刷新。用完后停止自己启动的服务。
 
-| 页面 | 场景 |
-| --- | --- |
-| `http://127.0.0.1:8769/fixture.html` | 图片组折叠与展开、流式追加、历史行重建、分散消息、暗色外观和卸载恢复。 |
-| `http://127.0.0.1:8769/controls.html` | 模拟菜单快捷键、图片缩放/拖拽手势和卸载清理；也支持旧路径 `http://127.0.0.1:8769/h/fixture-host/workspace/fixture-workspace/`。 |
-| `http://127.0.0.1:8769/session-screen.html` | 模拟 Paseo RPC/UI 上下文中的工作区会话选择、取消、恢复和旧入口迁移。 |
-| `http://127.0.0.1:8769/image-navigation.html` | 大图方向键切换、连续按键、缩放复位及弹窗焦点隔离。 |
+建议回归顺序：
 
-浏览器页检查的是夹具提供的本地模拟行为。它们不证明插件在某个 Paseo 版本、设备、daemon 或真实会话中已经通过验收；这些宿主环境需要单独检查。本指南不包含真实客户端截图，也不把合成页面作为截图验收素材；实际客户端检查范围见 [宿主交互检查清单](../../README.md#宿主交互检查清单)。完成后在运行服务的终端按 `Ctrl+C` 停止静态服务。
+1. 在 attachments 中检查五类附件；搜索与筛选后结果正确，空搜索结果保留工具栏。用 360×800、800×360 和宽窗口检查列表滚动。
+2. 打开图片，检查全窗口 Modal、44px 控件、前后切换、缩放与切图复位、双指缩放后平移、适应状态下滑动切图、Escape 关闭与焦点返回。
+3. 进入 features，分别关闭附件、纯图片聚合、图片手势、会话历史及音频。检查 Registration state 中对应注册和订阅的清理，独立项不互相误关。
+4. 切换 Empty：自动 pill 应隐藏；Add first attachment 后应显示。Older attachments 的最新页没有附件，较早页面有附件，pill 仍应显示，面板可加载较早附件。
+5. Fail next history request 后刷新，出现错误和重试入口；已发现附件的 pill 不应被误隐藏。
+6. gallery 检查默认 3/5 张、展开/收起与重复资源键；关闭聚合后手工渲染夹具不代表宿主仍有 renderer 注册。
+7. 刷新页面后切换 Empty，点击 Delay next history response，再点击面板的 Refresh attachments，并在 600ms 内点击 Add first attachment。旧请求在 1200ms 后返回空页；面板应自动继续请求并显示 6 个合成附件，无需手动再次刷新。
+
+夹具截图只可用作开发证据，不可冒充市场要求的实际 Paseo 界面截图。原生 iOS/Android 的安全区域、系统返回、旋转、焦点和真实触控仍需设备验收。当前证据见 [VALIDATION.md](../../VALIDATION.md)。

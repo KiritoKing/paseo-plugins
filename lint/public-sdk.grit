@@ -1,0 +1,10 @@
+engine biome(1.0)
+language js(typescript, jsx)
+
+`$loader.resolve($path)` as $call where {
+  $path <: r".*@getpaseo/.*",
+  register_diagnostic(
+    span = $call,
+    message = "Import public SDK entrypoints directly; do not discover private SDK or CLI installation paths."
+  )
+}

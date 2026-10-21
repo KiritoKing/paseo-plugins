@@ -1,15 +1,13 @@
-# Paseo UX
+# Paseo Essentials
 
-Paseo UX 改善聊天中的媒体浏览体验。连续图片显示为紧凑缩略图组，标注总数，默认显示三张，其余收起。点击图片可预览、使用左右方向键或按钮切换上一张、下一张，滚轮缩放、拖拽平移、双击复位和复制路径。
+Paseo Essentials helps you browse conversation attachments, view images, and return to workspace sessions. It groups complete image-only messages into compact galleries, provides a searchable attachment panel, and lets you browse and reopen restorable sessions in the current workspace.
 
-输入框上方的“媒体”按钮打开当前会话的媒体面板。面板提供图片网格、名称和路径搜索、来源标记、历史分页与刷新。图片来自当前会话的 Markdown 图片引用和结构化工具输出，重复引用同一资源在面板中合并。
+Image-only assistant and user messages are displayed as galleries; mixed text remains in Paseo's renderer. The attachment panel indexes references in the selected conversation's public timeline and structured tool results. Search by name or path, filter by media type, and load older history. The composer entry appears after the metadata index finds attachments in the conversation.
 
-声明的 Paseo 兼容范围为 `>=0.11.2 <0.12.0`。历史验证记录涉及 Paseo 0.11.2；这不代表整个声明范围都经过验证或得到保证。在设置的“媒体预览增强”中可关闭聊天内聚合，并将默认缩略图数量设为 1 至 8 张。聊天内聚合面向 Paseo 0.11.2 的桌面与 Web 客户端；原生移动端可以使用媒体面板，真实移动设备仍需单独验证。
+The index covers references exposed in the host's message text and tool details. It follows the host's merged conversation view; it does not recover old tool details or separate attachment payloads omitted from that history.
 
-插件只读取会话里引用的图片，不扫描整个工作目录。媒体元数据读取自所选 daemon 的会话历史，本地图片在该 daemon 上读取，单张上限 16 MiB。HTTP 图片由客户端按显示需要加载。插件不发送会话内容到外部模型，不修改消息、原图或其他插件设置。
+Paseo 0.11.2 or later is required. Reopening a session uses the public Paseo CLI on the daemon host. The executable must be available on that host's PATH. PASEO_HOME selects the daemon data directory and defaults to ~/.paseo; PASEO_ESSENTIALS_CLI can select a different executable. The plugin does not require a separate account, token, or model. Preferences are scoped to a host and apply to devices connected to it.
 
-图片处于原生加载或失败状态时保留 Paseo 原有界面。聊天聚合依赖桌面界面的图片标记和会话布局；Paseo 更改这些结构后可能需要适配。插件禁用或卸载时恢复原生图片展示。
+Settings control attachment indexing, image grouping, visible thumbnail count, image gestures, session history, and audio playback. These switches default to on. The thumbnail count ranges from 1 to 8 and defaults to 3. Supported local audio can be played on request. Video, PDF, and other files appear as attachment cards; the plugin has no in-app video player or PDF reader. Native iOS and Android behavior has not been verified on real devices.
 
-工作区顶部的“会话”按钮和新建标签菜单中的“恢复工作区会话…”打开该工作区的历史会话选择弹窗，可搜索并选择恢复。取消保留原聊天，选择成功后关闭弹窗并打开目标会话。macOS 上 `Cmd+Shift+T` 恢复最近关闭的会话，`Ctrl+反引号` 新建终端。已关闭会话通过安装附带的官方 Paseo CLI 恢复原 ID；仍运行的会话只打开标签页。历史列表来自该 daemon 保留的记录，不能找回永久删除的数据。
-
-快捷键和鼠标手势适用于 Paseo 0.11.2 桌面/Web；快捷键适配依赖当前 macOS 默认“新建终端”绑定，新建菜单中的终端提示同步更新，原生快捷键设置对话框仍显示原配置。插件禁用后恢复原有按键处理。
+The daemon reads public conversation history and structured tool results to find media references. It does not scan workspace directories. Before reading local image or audio content, it confirms that the source appears in the conversation history; a referenced path can resolve outside the workspace. Local image and supported audio reads are limited to 16 MiB. HTTP(S) sources open through Paseo's external URL handler; the daemon does not fetch them. The plugin does not send conversation content to an additional model; messages and tool results sent to an agent follow the selected provider's existing Paseo configuration.

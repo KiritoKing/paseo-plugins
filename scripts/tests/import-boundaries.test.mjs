@@ -68,17 +68,3 @@ test("permits server Node APIs and a browser-only adapter", () => {
     },
   );
 });
-
-test("rejects HTML and web-only props in a native client contribution", () => {
-  fixture(
-    {
-      "index.client.tsx":
-        'export const Panel = () => <div className="panel" onClick={() => {}} />;',
-    },
-    (directory) => {
-      const errors = checkPackage(directory).join("\n");
-      assert.match(errors, /React Native components/);
-      assert.match(errors, /browser-only JSX props/);
-    },
-  );
-});

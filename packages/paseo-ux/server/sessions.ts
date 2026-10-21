@@ -1,5 +1,4 @@
 import { execFile } from "node:child_process";
-import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -47,24 +46,17 @@ export async function loadSessions(
   return { workspaceName: workspace.name, sessions };
 }
 
-export function cliCommand() {
-  // Use the CLI bundled alongside this daemon, never an unrelated machine's default host.
-  const runtimeRequire = createRequire(process.argv[1] || join(process.cwd(), "runtime.js"));
-  let entry: string;
-  try {
-    entry = runtimeRequire.resolve("@getpaseo/cli/dist/index.js");
-  } catch {
-    throw new Error("同一 daemon 的 Paseo CLI 不可用；请使用包含 CLI 的官方安装。");
-  }
+export function cliCommand(env: NodeJS.ProcessEnv = process.env) {
+  // The executable and --home are public CLI interfaces. Do not resolve a
+  // package's private dist layout or inherit a remote PASEO_HOST selector.
   return {
-    binary: process.execPath,
-    entry,
-    home: process.env.PASEO_HOME || join(homedir(), ".paseo"),
+    binary: env.PASEO_ESSENTIALS_CLI?.trim() || "paseo",
+    home: env.PASEO_HOME || join(homedir(), ".paseo"),
   };
 }
 
 export function createSessionRestorer(
-  reload: (id: string) => Promise<unknown> = reloadOriginalSession,
+  reload: (id: string, cwd?: string) => Promise<unknown> = reloadOriginalSession,
 ) {
   const inFlight = new Map<
     string,
@@ -89,7 +81,7 @@ export function createSessionRestorer(
       const before = await context.paseo.agents.ref(selected.id).refresh();
       if (before && !before.agent.archivedAt && before.agent.status !== "closed")
         return { agentId: selected.id, workspaceId: input.workspaceId, restored: false };
-      const result: unknown = await reload(selected.id);
+      const result: unknown = await reload(selected.id, before?.agent.cwd);
       if (
         !result ||
         typeof result !== "object" ||
@@ -112,20 +104,33 @@ export function createSessionRestorer(
 }
 export const reopenSession = createSessionRestorer();
 
-async function runBundledCli(args: string[]) {
+async function runPublicCli(args: string[]) {
   const cli = cliCommand();
-  const { stdout } = await execute(cli.binary, [cli.entry, "--home", cli.home, ...args], {
-    timeout: 45_000,
-    maxBuffer: 256 * 1024,
-    env: { ...process.env, PASEO_HOST: "", ELECTRON_RUN_AS_NODE: "1" },
-  });
-  return stdout;
+  try {
+    const { stdout } = await execute(cli.binary, ["--home", cli.home, ...args], {
+      timeout: 45_000,
+      maxBuffer: 256 * 1024,
+      env: { ...process.env, PASEO_HOST: "" },
+    });
+    return stdout;
+  } catch {
+    throw new Error(
+      "The official Paseo CLI could not complete this action. Ensure paseo is on this host’s PATH and PASEO_HOME selects this daemon. A standalone executable can be set with PASEO_ESSENTIALS_CLI.",
+    );
+  }
 }
-async function reloadOriginalSession(id: string): Promise<unknown> {
-  return JSON.parse(await runBundledCli(["agent", "reload", id, "--json"]));
-}
-export async function probeRestoreCli() {
-  const version = (await runBundledCli(["--version"])).trim();
-  if (!/^\d+\.\d+\.\d+/.test(version)) throw new Error("Paseo CLI 版本检查失败。");
-  return version;
+async function reloadOriginalSession(id: string, cwd?: string): Promise<unknown> {
+  // Inspect first: a misconfigured CLI must fail before restarting any process.
+  const inspected: unknown = JSON.parse(await runPublicCli(["agent", "inspect", id, "--json"]));
+  if (
+    !inspected ||
+    typeof inspected !== "object" ||
+    !("Id" in inspected) ||
+    inspected.Id !== id ||
+    (cwd && (!("Cwd" in inspected) || inspected.Cwd !== cwd))
+  )
+    throw new Error(
+      "The CLI selected a different host or conversation. Check PASEO_HOME before retrying.",
+    );
+  return JSON.parse(await runPublicCli(["agent", "reload", id, "--json"]));
 }
