@@ -1,17 +1,15 @@
 import type {
   PluginClientContext,
-  PluginTheme,
   PluginTimelineTransformerContribution,
 } from "@getpaseo/plugin/client";
 import { useState, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { Text, View } from "react-native";
-import { createAppearanceController } from "../../client/controller";
-import { createAppearanceSettings } from "../../client/settings";
-import { codexThemes } from "../../client/themes";
-import { createPresentationViews } from "../../client/views";
-import { projectMessage } from "../../shared/message-presentation";
-import { projectReasoning, projectTool } from "../../shared/tool-presentation";
+import { createAppearanceController } from "../../../client/conversation/controller";
+import { createAppearanceSettings } from "../../../client/conversation/settings";
+import { createPresentationViews } from "../../../client/conversation/views";
+import { projectMessage } from "../../../shared/conversation/message-presentation";
+import { projectReasoning, projectTool } from "../../../shared/conversation/tool-presentation";
 import { fixture } from "./host";
 
 const registrations = new Map<string, PluginTimelineTransformerContribution>();
@@ -48,25 +46,7 @@ function App() {
     controller.getSnapshot,
     controller.getSnapshot,
   );
-  const palette = codexThemes.find(
-    (theme) => theme.appearance === (dark ? "dark" : "light"),
-  )!.colors;
-  const theme: PluginTheme = {
-    appearance: dark ? "dark" : "light",
-    colors: {
-      surface0: palette.background,
-      surface1: palette.raised,
-      surface2: palette.control,
-      border: palette.border,
-      foreground: palette.foreground,
-      foregroundMuted: palette.mutedForeground,
-      accent: palette.accent ?? palette.foreground,
-      accentForeground: dark ? "#181818" : "#ffffff",
-      statusSuccess: dark ? "#82c99a" : "#247744",
-      statusWarning: dark ? "#e6bf77" : "#916417",
-      statusDanger: dark ? "#ed9696" : "#b73737",
-    },
-  };
+  const theme = fixture.theme(dark ? "dark" : "light");
   const props = {
     theme,
     host: { id: "fixture", label: "合成示例" },
@@ -136,10 +116,10 @@ function App() {
         }}
       >
         <button type="button" onClick={() => setDark(!dark)}>
-          {dark ? "浅色" : "深色"}
+          {dark ? "宿主主题：深色" : "宿主主题：浅色"}
         </button>
         <button type="button" onClick={() => showSettings(!settings)}>
-          {settings ? "返回会话示例" : "外观设置"}
+          {settings ? "返回会话示例" : "会话阅读设置"}
         </button>
         <button type="button" onClick={() => setFrame(frame ? 0 : 390)}>
           {frame ? "宽屏" : "390px"}

@@ -12,6 +12,10 @@ import {
   View,
 } from "react-native";
 import { featureValuesSchema, type MediaAsset } from "../../shared/contracts";
+import {
+  fixture as conversationFixture,
+  useSettings as useAppearanceSettings,
+} from "./conversation/host";
 
 export { FlatList, ScrollView, TextInput };
 
@@ -81,7 +85,7 @@ function makeSnapshot() {
     },
   };
 }
-export function useSettings() {
+function useMediaSettings() {
   return useSyncExternalStore(
     (callback) => {
       listeners.add(callback);
@@ -89,6 +93,11 @@ export function useSettings() {
     },
     () => snapshot,
   );
+}
+export function useSettings(definition?: { id: string }) {
+  const media = useMediaSettings();
+  const appearance = useAppearanceSettings();
+  return definition?.id === "appearance" ? appearance : media;
 }
 export function useAgent() {
   return { title: "Synthetic conversation" };
@@ -104,6 +113,9 @@ export async function openExternalUrl() {
 }
 export async function copyText() {
   /* Preserve the user's clipboard in this fixture. */
+}
+export function useRevealedText(text: string) {
+  return text;
 }
 export function useToast() {
   return { show() {}, error() {} };
@@ -371,9 +383,18 @@ export const fakePaseo = {
     },
   },
 };
+conversationFixture.subscribe(() => {
+  for (const observer of observers)
+    observer.update({
+      type: "status",
+      payload: { status: "plugin_settings_changed", settingsId: "appearance" },
+    });
+});
 export async function rpc(contract: { name: string }, raw: unknown): Promise<unknown> {
   const input = raw as { agentId: string; assetId: string; cursor?: unknown };
   if (contract.name === "features.read") return values;
+  if (contract.name === "settings.appearance.read")
+    return { status: "ready", revision: "fixture", values: conversationFixture.values };
   if (contract.name === "media.list") {
     if (failNext) {
       failNext = false;

@@ -10,7 +10,6 @@ on:
         options:
           - paseo-ux
           - paseo-aiw-companion
-          - paseo-codex-theme
       version:
         description: Exact version already recorded in the package manifest
         required: true

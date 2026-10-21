@@ -4,8 +4,8 @@ import type {
   PluginClientContext,
   PluginTimelineTransformerContribution,
 } from "@getpaseo/plugin/client";
-import { createAppearanceController } from "../client/controller";
-import { appearanceSchema, defaultAppearance } from "../shared/appearance";
+import { createAppearanceController } from "../client/conversation/controller";
+import { appearanceSchema, defaultAppearance } from "../shared/conversation/appearance";
 
 const flush = () => new Promise<void>((resolve) => setImmediate(resolve));
 function harness() {

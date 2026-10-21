@@ -1,9 +1,0 @@
-{
-  "id": "paseo-codex-theme",
-  "name": "Codex UI",
-  "description": "优化 Paseo 现有会话的阅读、工具与思考记录，提供字号、密度设置和浅深主题。",
-  "media": ["assets/conversation.jpg"],
-  "requirements": {
-    "paseo": ">=0.11.2"
-  }
-}

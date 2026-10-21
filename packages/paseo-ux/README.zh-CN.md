@@ -1,6 +1,6 @@
 # Paseo Essentials
 
-Paseo Essentials 为 Paseo 增加会话附件浏览、图片组和工作区会话历史功能。npm 包名为 @chlrc/paseo-ux。manifest ID 仍为 paseo-ux，以保留原插件身份和设置命名空间。
+Paseo Essentials 为 Paseo 增加会话阅读设置、附件浏览、图片组和工作区会话历史功能。npm 包名为 @chlrc/paseo-ux。manifest ID 仍为 paseo-ux，以保留原插件身份和设置命名空间。
 
 ## 环境要求
 
@@ -19,6 +19,14 @@ Paseo Essentials 为 Paseo 增加会话附件浏览、图片组和工作区会�
 连接远端 daemon 时，应在该 daemon 主机上安装并重载插件。恢复会话不能依赖另一台机器上的 CLI。
 
 ## 使用插件
+
+### 会话阅读
+
+在 Essentials 的会话阅读设置中调整正文与代码排版、字号、密度、阅读宽度、思考展开方式和可选的逐条 shell 记录。工具默认保留原生分组。“全部折叠（仅输出）”隐藏全部工具、思考及其标题，包括流式与失败记录，原始历史保留；切回分类设置即可恢复之前的偏好。关闭会话阅读增强会释放其时间线呈现，不影响附件和会话历史。
+
+流式正文、图片、附件、不支持的 Markdown、文件链接、未知工具和超限内容继续使用原生呈现。纯图片消息仍可使用 Essentials 的图片组，图片与正文混合时保持原生。会话排版跟随当前 Paseo 主题，插件不再提供或切换配色主题。
+
+这些能力从已移除的 Codex 主题包迁入。既有偏好可以保留到 Essentials，且不会覆盖媒体设置，步骤见[迁移说明](../../docs/migration.md#会话阅读并入-essentials)。设置按 daemon host 保存。
 
 ### 会话媒体
 
@@ -60,7 +68,7 @@ daemon 从所选会话的公开 timeline 和结构化工具结果中查找媒体
     pnpm --filter @chlrc/paseo-ux typecheck
     pnpm --filter @chlrc/paseo-ux test
 
-此包使用仓库的 pnpm workspace 和锁文件。修改代码后，安装或重载本地插件以载入新 bundle。
+此包使用仓库的 pnpm workspace 和锁文件。修改代码后，安装或重载本地插件以载入新 bundle。固定版本的 Marked 构建与许可证位于 shared/conversation/vendor；有意升级该解析器时运行 pnpm --filter @chlrc/paseo-ux build:markdown。
 
 ### 会话恢复配置
 

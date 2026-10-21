@@ -5,9 +5,10 @@ import {
   appearanceSchema,
   appearanceSettings,
   defaultAppearance,
-} from "../shared/appearance";
-import { projectMessage } from "../shared/message-presentation";
-import { projectReasoning, projectTool } from "../shared/tool-presentation";
+} from "../../shared/conversation/appearance";
+import { projectMessage } from "../../shared/conversation/message-presentation";
+import { projectReasoning, projectTool } from "../../shared/conversation/tool-presentation";
+import { extractImageOnlyMessage } from "../../shared/media";
 
 export type PresentationKind = "tools" | "reasoning" | "messages";
 export interface AppearanceSnapshot {
@@ -120,6 +121,10 @@ export function createAppearanceController(client: PluginClientContext) {
               transform({ item, phase }) {
                 // Keep in-flight native Markdown stable; switch presentation once complete.
                 if (phase === "streaming") return undefined;
+                // The Essentials image-only gallery owns complete assistant
+                // messages made entirely of image links. Coordinate these two
+                // transformers directly; do not depend on registration order.
+                if (extractImageOnlyMessage(item.text)) return undefined;
                 const data = projectMessage(item, phase);
                 return data
                   ? { items: [{ type: "plugin", kind: "readable-message", version: 1, data }] }

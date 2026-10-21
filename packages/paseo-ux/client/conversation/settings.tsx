@@ -7,7 +7,7 @@ import {
 } from "@getpaseo/plugin/client/ui";
 import { useSyncExternalStore } from "react";
 import { Text, View } from "react-native";
-import { type Appearance, appearanceSettings } from "../shared/appearance";
+import { type Appearance, appearanceSettings } from "../../shared/conversation/appearance";
 import type { AppearanceController } from "./controller";
 import { createPresentationViews } from "./views";
 
@@ -72,7 +72,7 @@ export function createAppearanceSettings(controller: AppearanceController) {
           <View style={{ gap: 8 }}>
             <Text accessibilityRole="alert" style={text}>
               {current.status === "unavailable"
-                ? "当前客户端不支持会话呈现扩展，正在使用原生呈现。主题仍可单独使用。"
+                ? "当前客户端不支持会话呈现扩展，正在使用原生呈现。附件与会话历史仍可使用。"
                 : current.status === "loading"
                   ? "正在应用外观设置…"
                   : "外观设置暂不可用，正在使用原生呈现。"}
@@ -236,12 +236,9 @@ export function createAppearanceSettings(controller: AppearanceController) {
             </>
           )}
         </View>
-        <SettingsSection
-          title="主题与兼容性"
-          info="在设置 → 外观中选择 Codex Light 或 Codex Dark，也可以继续使用当前主题。"
-        >
+        <SettingsSection title="兼容性" info="会话呈现跟随 Paseo 当前主题。">
           <Text style={text}>
-            同类消息使用一个呈现插件。若其他插件负责工具或思考，请先切回“按类别设置”，再关闭对应开关；正文可单独关闭。关闭总开关后恢复原生呈现；配色可以单独使用。
+            同类消息使用一个呈现插件。若其他插件负责工具或思考，请先切回“按类别设置”，再关闭对应开关；正文可单独关闭。关闭总开关后恢复原生呈现，附件与会话历史保持独立。
           </Text>
         </SettingsSection>
       </View>

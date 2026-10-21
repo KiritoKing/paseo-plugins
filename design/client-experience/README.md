@@ -1,6 +1,6 @@
 # Paseo 既有界面的 UI／UX 改造
 
-当前范围：在现有 Paseo 客户端、页面和工作流内优化呈现与操作体验。成品仍是替换现有 theme 的独立插件；配色是可调 token，重点是阅读、层级、密度与反馈。候选实现已落在 `packages/paseo-codex-theme`，显示名为 Codex UI，运行与未验证范围见[验证记录](../../packages/paseo-codex-theme/VALIDATION.md)。
+当前范围：在现有 Paseo 客户端、页面和工作流内优化会话阅读。原独立主题包已移除，正文、思考与可选工具样式及仅输出模式迁入 `packages/paseo-ux` 的 Essentials，会话组件跟随宿主主题，不再贡献配色。当前验证范围见[Essentials 验证记录](../../packages/paseo-ux/VALIDATION.md)，此前结果保留在[迁移前历史](evidence/codex-ui-history.md)。
 
 ## 首版交付
 
@@ -19,12 +19,12 @@
 
 Project／Workspace／Session、Client／Server／Runtime、Control／Harness／Model 只用于理解和尊重原生上下文，不据此新增页面、实体、状态机或导航层级。
 
-原生创建会话、输入发送、权限处理、运行控制、模型配置、文件、diff、终端、会话恢复与媒体功能继续按现有归属运行。本插件不增加或接管这些业务动作。
+原生创建会话、输入发送、权限处理、运行控制、模型配置、文件、diff 与终端继续由 Paseo 管理。会话恢复与媒体功能由 Essentials 原有模块提供，本轮阅读迁移不改变其业务语义。
 
 ## 能力分层
 
-- **公开接口层**：`addTheme`、timeline transformer／renderer、插件设置。用于首版的主题与受支持消息展示。[官方 reference](https://paseo.sh/docs/plugins/reference)
-- **可选局部适配候选**：原生 composer 的间距和密度、已有控件的视觉对齐。公开接口没有相应布局控制时，必须单独验证 desktop／web 结构、限定作用范围、默认关闭且失配不应用；不把它写成稳定首版能力。
+- **公开接口层**：timeline transformer／renderer、插件设置及宿主主题 token。用于受支持的会话呈现，不注册主题。[官方 reference](https://paseo.sh/docs/plugins/reference)
+- **原生边界**：Essentials 不提供 DOM、composer 局部样式或原型补丁；此前的局部适配候选已退出方案。
 - **原生保持**：侧栏结构、窗口与 pane 布局、权限按钮、模型／effort 控件、快捷键与运行控制。没有公开扩展点的深改暂不承诺。
 
 以 `v0.11.4` 为既有研究基线；实际发布前按目标 App、daemon 与 SDK 重新核对。升级与其他插件共存的限制、清理和验收见 [兼容合同](compatibility-contract.md)。
@@ -33,6 +33,6 @@ Project／Workspace／Session、Client／Server／Runtime、Control／Harness／
 
 此前 [三方向概念稿](concepts/manifest.json) 与 [工作概览三状态图](storyboard-v2/README.md) 均已退出当前方案，文件保留为历史产物。它们不能作为实现目标或发布截图。
 
-真实组件夹具复用仓库 `pnpm fixtures:serve`，入口为 `/conversation-ui.html`；使用相同数据与 token 覆盖正文／代码、工具失败、展开、流式状态、窄窗与关闭增强。当前截图在[组件证据目录](evidence/ui/)，公开展示图见[实际组件图](../../packages/paseo-codex-theme/assets/conversation.jpg)。
+真实组件夹具复用仓库 `pnpm fixtures:serve`，入口为 `/conversation-ui.html`；使用相同数据与 token 覆盖正文／代码、工具失败、展开、流式状态、窄窗与关闭增强。当前截图在[组件证据目录](evidence/ui/)，迁移前的组件图见[历史组件图](evidence/ui/wide-light.jpg)。
 
 用户已授权按 UI／UX 范围开工。组件夹具不能代替原生客户端、升级或设备验收；各层结果分别记录。[历史研究与来源](research-notes.md) 保留供追溯，其中已撤回的功能推导不再适用。

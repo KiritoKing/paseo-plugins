@@ -3,9 +3,16 @@ import { openExternalUrl } from "@getpaseo/plugin/client";
 import { copyText, Icon, ScrollView, useRevealedText } from "@getpaseo/plugin/client/react-native";
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Platform, Pressable, Text, type TextStyle, View } from "react-native";
-import type { Appearance } from "../shared/appearance";
-import type { BlockNode, InlineNode, MessagePresentation } from "../shared/message-presentation";
-import type { ReasoningPresentation, ToolPresentation } from "../shared/tool-presentation";
+import type { Appearance } from "../../shared/conversation/appearance";
+import type {
+  BlockNode,
+  InlineNode,
+  MessagePresentation,
+} from "../../shared/conversation/message-presentation";
+import type {
+  ReasoningPresentation,
+  ToolPresentation,
+} from "../../shared/conversation/tool-presentation";
 import type { AppearanceController } from "./controller";
 
 type Theme = PluginHostProps["theme"];

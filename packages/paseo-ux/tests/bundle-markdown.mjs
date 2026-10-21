@@ -11,7 +11,7 @@ const source = require.resolve("marked");
 const packageRoot = resolve(dirname(source), "..");
 const metadata = JSON.parse(await readFile(resolve(packageRoot, "package.json"), "utf8"));
 if (metadata.version !== "18.1.1") throw Error("Unexpected Markdown dependency version");
-const output = resolve(root, "shared/vendor");
+const output = resolve(root, "shared/conversation/vendor");
 await mkdir(output, { recursive: true });
 await build({
   stdin: {

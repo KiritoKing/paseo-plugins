@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { messagePresentationSchema, projectMessage } from "../shared/message-presentation";
+import {
+  messagePresentationSchema,
+  projectMessage,
+} from "../shared/conversation/message-presentation";
 
 function assistantMessage(
   text: string,

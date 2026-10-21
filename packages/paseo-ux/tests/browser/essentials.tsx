@@ -1,6 +1,6 @@
-import type { PluginClientContext } from "@getpaseo/plugin/client";
+import type { PluginClientContext, PluginSurfaceProps } from "@getpaseo/plugin/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ImageGallery } from "../../client/gallery";
 import { MediaPanel } from "../../client/panel";
@@ -14,18 +14,10 @@ import {
   rpc,
   sampleImage,
 } from "./essentials-host";
+import { syntheticHostTheme } from "./host-theme";
 
-const colors = {
-  surface0: "#fff",
-  surface1: "#f1f5f9",
-  surface2: "#e2e8f0",
-  foreground: "#0f172a",
-  foregroundMuted: "#475569",
-  border: "#cbd5e1",
-  accent: "#2563eb",
-  statusDanger: "#b91c1c",
-};
 const registrations = new Map<string, { visible?: boolean }>();
+const settingsScreens = new Map<string, ComponentType<PluginSurfaceProps>>();
 const callbacks = new Set<() => void>();
 function changed() {
   for (const callback of callbacks) callback();
@@ -46,9 +38,16 @@ const client = {
   openPanel() {},
   async playAudio() {},
   addScreen: () => register("screen"),
-  addSettingsScreen: () => register("settings"),
+  addSettingsScreen: (item: { id: string; Component: ComponentType<PluginSurfaceProps> }) => {
+    settingsScreens.set(item.id, item.Component);
+    const remove = register("settings:" + item.id);
+    return () => {
+      settingsScreens.delete(item.id);
+      remove();
+    };
+  },
   addWorkspacePanel: () => register("panel"),
-  addTimelineRenderer: () => register("renderer"),
+  addTimelineRenderer: (item: { kind: string }) => register("renderer:" + item.kind),
   addTimelineTransformer: (item: { id: string }) => register(item.id),
   addCommandCenterItem: (item: { id: string }) => register("command:" + item.id),
   addSlashCommand: (item: { name: string }) => register("slash:" + item.name),
@@ -90,9 +89,10 @@ function App() {
   }, []);
   const props = {
     host: { id: "synthetic-host", label: "Synthetic host" },
-    theme: { appearance: "light" as const, colors },
+    theme: syntheticHostTheme("light"),
     layout: { platform: "web" as const, compact },
   };
+  const ReadingSettings = settingsScreens.get("appearance");
   return (
     <QueryClientProvider client={queries}>
       <header>
@@ -100,7 +100,7 @@ function App() {
         <span> Synthetic host APIs; real React Native Web components.</span>
       </header>
       <nav aria-label="Fixture controls">
-        {["attachments", "features", "gallery"].map((value) => (
+        {["attachments", "features", "reading", "gallery"].map((value) => (
           <button type="button" key={value} onClick={() => setRoute(value)}>
             {value}
           </button>
@@ -144,6 +144,7 @@ function App() {
           />
         ) : null}
         {route === "features" ? <MediaSettings {...props} /> : null}
+        {route === "reading" && ReadingSettings ? <ReadingSettings {...props} /> : null}
         {route === "gallery" ? (
           <ImageGallery
             {...props}

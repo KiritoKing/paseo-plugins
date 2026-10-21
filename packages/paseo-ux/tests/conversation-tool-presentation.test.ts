@@ -6,7 +6,7 @@ import {
   projectTool,
   reasoningPresentationSchema,
   toolPresentationSchema,
-} from "../shared/tool-presentation";
+} from "../shared/conversation/tool-presentation";
 
 const MAX_PRESENTATION_BYTES = 256 * 1024;
 

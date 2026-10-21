@@ -4,7 +4,8 @@ import type { LucideIcon } from "lucide-react";
 import * as icons from "lucide-react";
 import { type CSSProperties, type ReactNode, useState, useSyncExternalStore } from "react";
 import { ScrollView } from "react-native";
-import { defaultAppearance } from "../../shared/appearance";
+import { defaultAppearance } from "../../../shared/conversation/appearance";
+import { syntheticHostTheme } from "../host-theme";
 
 let values = { ...defaultAppearance };
 let revision = 1;
@@ -14,8 +15,13 @@ export const fixture = {
   copyFailure: false,
   settingsFailure: false,
   copied: "",
+  theme: syntheticHostTheme,
   get values() {
     return values;
+  },
+  subscribe(listener: () => void) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
   },
   reset() {
     values = { ...defaultAppearance };

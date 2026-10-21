@@ -7,6 +7,7 @@ import type {
 import { useEffect } from "react";
 import type { z } from "zod";
 import { createAttachmentPresence } from "./client/attachment-presence";
+import { registerConversation } from "./client/conversation";
 import { gallerySchema, ImageGallery } from "./client/gallery";
 import { MediaPanel } from "./client/panel";
 import { makeSessionControls } from "./client/session-controls";
@@ -84,6 +85,12 @@ export default function contribute(client: PluginClientContext) {
       Component: Gallery,
     }),
   ];
+  let stopConversation: (() => void | Promise<void>) | undefined;
+  try {
+    stopConversation = registerConversation(client);
+  } catch {
+    // Conversation presentation is optional and must not block Essentials.
+  }
 
   function startAttachments() {
     let stopped = false;
@@ -401,7 +408,8 @@ export default function contribute(client: PluginClientContext) {
     if (!disposed) apply(undefined);
   });
   void refreshSettings();
-  return () => {
+  return async () => {
+    if (disposed) return;
     disposed = true;
     settingsRequest++;
     removeObserver();
@@ -410,6 +418,13 @@ export default function contribute(client: PluginClientContext) {
     stopSessions?.();
     stopGalleries?.();
     dialogs.dispose();
-    for (const cleanup of cleanups) void cleanup();
+    const pending = [
+      ...(stopConversation ? [Promise.resolve().then(stopConversation)] : []),
+      ...cleanups
+        .splice(0)
+        .reverse()
+        .map((cleanup) => Promise.resolve().then(cleanup)),
+    ];
+    await Promise.allSettled(pending);
   };
 }

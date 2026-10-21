@@ -20,7 +20,7 @@ const fixtures = [
   },
   {
     name: "conversation-ui",
-    directory: "packages/paseo-codex-theme/tests/browser",
+    directory: "packages/paseo-ux/tests/browser/conversation",
     entry: "app.tsx",
     nativeModule: "react-native-web",
     host: "host.tsx",
