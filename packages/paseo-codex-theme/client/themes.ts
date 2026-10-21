@@ -15,7 +15,8 @@ export const codexThemes: PluginThemeContribution[] = [
       border: "#e4e4e4",
       accent: "#0969da",
       mutedForeground: "#6b6b6b",
-      ring: "#969696",
+      // Paseo also uses this as the light sidebar's selected-row fill.
+      ring: "#e4edf9",
     },
   },
   {
