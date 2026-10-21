@@ -28,6 +28,8 @@ Streaming prose, image messages, attachments, unsupported Markdown, file links, 
 
 These controls replace the conversation features previously bundled with the removed Codex theme package. Existing preferences can be moved to Essentials without changing its media settings; see the [migration guide](../../docs/migration.md#会话阅读并入-essentials). Preferences are scoped to the daemon host.
 
+The [conversation reading contract](../../docs/conversation-reading.md) documents content ownership, plugin coexistence, settings, and cleanup requirements.
+
 ### Conversation media
 
 The Media composer entry appears after a metadata check finds attachments in the conversation. You can also open the panel with the Command Center attachment action or the /media command. Search by name or source, filter by media type, and load older history. The metadata check pages through conversation history so an empty newest page does not hide older attachments.

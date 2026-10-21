@@ -18,7 +18,7 @@ paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-ux
 paseo plugin add git:KiritoKing/paseo-plugins --path packages/paseo-aiw-companion
 ```
 
-安装在对应的 Paseo daemon 上。目录安装时请保留对应源码目录。会话阅读设置位于 Essentials 中，包括“全部折叠（仅输出）”、正文排版、思考和可选工具样式。插件跟随宿主配色，不提供或切换主题。旧主题插件的会话偏好迁移见[迁移说明](docs/migration.md)。
+安装在对应的 Paseo daemon 上。目录安装时请保留对应源码目录。会话阅读设置位于 Essentials 中，包括“全部折叠（仅输出）”、正文排版、思考和可选工具样式。插件跟随宿主配色，不提供或切换主题。旧主题插件的会话偏好迁移见[迁移说明](docs/migration.md)，内容归属和兼容边界见[会话阅读实现约定](docs/conversation-reading.md)。
 
 > **保留插件设置：** `paseo plugin remove <id>` 会删除该安装 ID 的设置目录。若升级流程需要先移除再重装，或准备卸载但希望日后恢复设置，请先备份对应 daemon 的 `plugin-settings/<id>/`，重装后再恢复并读回。迁移步骤见[迁移说明](docs/migration.md)。
 

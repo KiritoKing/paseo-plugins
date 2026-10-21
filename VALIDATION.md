@@ -11,10 +11,6 @@
 
 详情与边界见 [Essentials 验证记录](packages/paseo-ux/VALIDATION.md)。插件加载与设置文件读回不等于原生消息呈现或原生主题回退的实屏验收；移动设备、远端 CI、npm／市场发布未在本轮验证。
 
-## Codex UI 候选（2026-10-20）
-
-基于主干 `1cbbbb2` 的本轮记录见 [Codex UI 验证范围](design/client-experience/evidence/codex-ui-history.md)：完整 `pnpm check`、63 项测试、五个夹具与三包隔离打包通过；真实客户端仅有加载与局部读回，设备及 0.12.0 运行验收仍有缺口。以下各节为此前提交的历史记录，不代表当前源码的全部行为。
-
 ## PR 提交前复查（2026-10-20）
 
 基于主干 `663df64`，平台为 macOS arm64；格式化与工程迁移拆成两个提交。
