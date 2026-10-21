@@ -8,6 +8,7 @@ import { createRoot } from "react-dom/client";
 import { Text, View } from "react-native";
 import { createAppearanceController } from "../../client/controller";
 import { createAppearanceSettings } from "../../client/settings";
+import { codexThemes } from "../../client/themes";
 import { createPresentationViews } from "../../client/views";
 import { projectMessage } from "../../shared/message-presentation";
 import { projectReasoning, projectTool } from "../../shared/tool-presentation";
@@ -47,16 +48,19 @@ function App() {
     controller.getSnapshot,
     controller.getSnapshot,
   );
+  const palette = codexThemes.find(
+    (theme) => theme.appearance === (dark ? "dark" : "light"),
+  )!.colors;
   const theme: PluginTheme = {
     appearance: dark ? "dark" : "light",
     colors: {
-      surface0: dark ? "#181818" : "#ffffff",
-      surface1: dark ? "#222222" : "#fafafa",
-      surface2: dark ? "#2b2b2b" : "#f3f3f3",
-      border: dark ? "#3a3a3a" : "#e4e4e4",
-      foreground: dark ? "#ededed" : "#181818",
-      foregroundMuted: dark ? "#a3a3a3" : "#6b6b6b",
-      accent: dark ? "#ededed" : "#181818",
+      surface0: palette.background,
+      surface1: palette.raised,
+      surface2: palette.control,
+      border: palette.border,
+      foreground: palette.foreground,
+      foregroundMuted: palette.mutedForeground,
+      accent: palette.accent ?? palette.foreground,
       accentForeground: dark ? "#181818" : "#ffffff",
       statusSuccess: dark ? "#82c99a" : "#247744",
       statusWarning: dark ? "#e6bf77" : "#916417",

@@ -82,5 +82,27 @@
       "height": 680,
       "sha256": "9aeb4662a657e4b9edf24ff630f388072a923044f5b226e108001f459eb9f3ef"
     }
+  },
+  "restoredPalette": {
+    "recordedAt": "2026-10-21T03:34:24.745456+00:00",
+    "kind": "Actual component fixture in the Paseo browser; synthetic settings and source data",
+    "verified": [
+      "both eight-color palettes equal the previously installed original",
+      "light link computed color rgb(9, 105, 218) on white",
+      "dark link computed color rgb(108, 182, 255) on rgb(24, 24, 24)",
+      "link contrast 5.19:1 in light and 8.26:1 in dark",
+      "no console logs recorded in this browser tab"
+    ],
+    "limits": [
+      "Component fixture acceptance does not establish the selected native application theme.",
+      "Native settings navigation did not change the visible window; current native theme selection was not verified."
+    ],
+    "image": {
+      "file": "restored-dark.png",
+      "format": "PNG",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "cb28c1fc0909bc4fad6f89b5d0fb7c3ac526cf9e9a8f38de1f0d1bad877e6d23"
+    }
   }
 }

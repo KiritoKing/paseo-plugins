@@ -436,7 +436,7 @@ export function createPresentationViews(controller: AppearanceController) {
           setFailed(false);
           void openExternalUrl(url).catch(() => setFailed(true));
         }}
-        style={{ color: theme.colors.foreground, textDecorationLine: "underline" }}
+        style={{ color: theme.colors.accent, textDecorationLine: "underline" }}
       >
         {children}
         {failed ? "（打开失败，点击重试）" : ""}
