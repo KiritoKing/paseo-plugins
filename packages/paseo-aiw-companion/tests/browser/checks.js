@@ -32,6 +32,7 @@ export async function runChecks() {
     passed.push(name);
   };
   const search = async (text) => {
+    const normalized = text.trim();
     const requestsBefore = trace().filter((item) => item.method === "aiw.search").length;
     await fill("搜索文本", text);
     find("搜索文本").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
@@ -39,7 +40,7 @@ export async function runChecks() {
       const requests = trace().filter((item) => item.method === "aiw.search");
       if (requests.length <= requestsBefore) return false;
       const latest = requests.at(-1);
-      if (latest?.input.query !== text || document.body.textContent.includes("正在跨仓搜索…"))
+      if (latest?.input.query !== normalized || document.body.textContent.includes("正在跨仓搜索…"))
         return false;
       if (text === "empty") return document.body.textContent.includes("没有匹配结果");
       if (text === "error") return document.body.textContent.includes("无效的正则表达式");
@@ -62,6 +63,54 @@ export async function runChecks() {
     find("搜索配置").getAttribute("aria-expanded") === "false" && !find("搜索 include 路径"),
     "advanced options collapsed initially",
   );
+  await search(" \tneedle \t");
+  assert(
+    trace()
+      .filter((item) => item.method === "aiw.search")
+      .at(-1).input.query === "needle",
+    "Enter submits a trimmed query",
+  );
+  const maxQuery = "x".repeat(256);
+  await fill("搜索文本", ` ${maxQuery} `);
+  assert(
+    !find("搜索").disabled && !document.body.textContent.includes("搜索文本最多 256 个字符"),
+    "padded 256-character query is enabled without a length warning",
+  );
+  await click("搜索");
+  await waitFor(
+    () =>
+      trace()
+        .filter((item) => item.method === "aiw.search")
+        .at(-1)?.input.query === maxQuery && !document.body.textContent.includes("正在跨仓搜索…"),
+  );
+  assert(
+    trace()
+      .filter((item) => item.method === "aiw.search")
+      .at(-1).input.query === maxQuery,
+    "search button submits a trimmed 256-character query",
+  );
+  for (const [text, name, warning] of [
+    [` ${"x".repeat(257)} `, "257-character query is blocked for button and Enter", true],
+    [" \t ", "whitespace-only query is blocked for button and Enter", false],
+  ]) {
+    await fill("搜索文本", text);
+    const before = trace().filter((item) => item.method === "aiw.search").length;
+    find("搜索文本").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    await frame();
+    assert(
+      find("搜索").disabled &&
+        document.body.textContent.includes("搜索文本最多 256 个字符") === warning &&
+        trace().filter((item) => item.method === "aiw.search").length === before,
+      name,
+    );
+  }
+  await search(" needle value ");
+  assert(
+    trace()
+      .filter((item) => item.method === "aiw.search")
+      .at(-1).input.query === "needle value",
+    "query normalization preserves internal whitespace",
+  );
   await search("needle");
   assert(
     trace()
@@ -82,6 +131,7 @@ export async function runChecks() {
     "search hit opens line 42 in shared reader",
   );
   await click("文件");
+  await waitFor(() => !!find("打开 src/main.ts"));
   assert(!!find("打开 src/main.ts"), "file tree ancestors expanded after search hit");
   await click("改动");
   assert(document.body.textContent.includes("对比范围"), "business diff view retained");

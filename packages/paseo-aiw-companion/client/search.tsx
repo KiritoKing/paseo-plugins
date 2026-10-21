@@ -65,10 +65,13 @@ export function useAiwSearch({
       if (timer !== undefined) clearTimeout(timer);
     };
   }, [workspaceId]);
+  const normalizedQuery = query.trim();
+  const queryTooLong = normalizedQuery.length > 256;
+  const canSearch = normalizedQuery.length > 0 && !queryTooLong && repoIds.length > 0;
   const run = () => {
-    if (!query.trim() || !repoIds.length || query.length > 256) return;
+    if (!canSearch) return;
     const next = {
-      query,
+      query: normalizedQuery,
       repoIds,
       regex,
       caseSensitive,
@@ -91,6 +94,8 @@ export function useAiwSearch({
   return {
     input,
     query,
+    canSearch,
+    queryTooLong,
     setQuery: (value: string) => {
       setQuery(value);
       if (!value) {
@@ -223,7 +228,7 @@ export function SearchBar({
           theme={theme}
           label="搜索"
           icon="Search"
-          disabled={!state.query.trim() || state.repoIds.length === 0 || state.query.length > 256}
+          disabled={!state.canSearch}
           onPress={state.run}
         />
       </View>
@@ -275,7 +280,7 @@ export function SearchBar({
           请选择至少一个可用仓库。{!state.advanced ? "展开搜索配置调整范围。" : ""}
         </Text>
       ) : null}
-      {state.query.length > 256 ? (
+      {state.queryTooLong ? (
         <Text style={{ color: theme.colors.statusWarning, fontSize: 12 }}>
           搜索文本最多 256 个字符。
         </Text>
