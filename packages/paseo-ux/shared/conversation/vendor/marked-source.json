@@ -1,0 +1,9 @@
+{
+  "name": "marked",
+  "version": "18.1.1",
+  "source": "https://registry.npmjs.org/marked/-/marked-18.1.1.tgz",
+  "entry": "lib/marked.esm.js",
+  "sha256": "930457e5d55439f90465015cc507d3323366e80df5f7a701b61189d4e1046bda",
+  "generatedBy": "esbuild 0.25.12",
+  "license": "MIT"
+}

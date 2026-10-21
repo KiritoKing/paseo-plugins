@@ -1,6 +1,6 @@
 # Paseo Essentials
 
-Paseo Essentials adds conversation attachment browsing, image galleries, and workspace session history to Paseo. The npm package is @chlrc/paseo-ux. The manifest ID remains paseo-ux to preserve the existing plugin identity and settings namespace.
+Paseo Essentials adds conversation reading controls, attachment browsing, image galleries, and workspace session history to Paseo. The npm package is @chlrc/paseo-ux. The manifest ID remains paseo-ux to preserve the existing plugin identity and settings namespace.
 
 ## Requirements
 
@@ -19,6 +19,16 @@ Install the plugin on the daemon that will host it. From the repository root:
 For a remote daemon, install and reload the plugin on that daemon host. Do not rely on a CLI running on another machine to restore sessions.
 
 ## Use the plugin
+
+### Conversation reading
+
+Open Essentials' conversation reading settings to adjust Markdown and code layout, font size, density, reading width, reasoning disclosure, and optional individual shell records. Tool grouping remains native by default. Output-only mode hides all tool and reasoning rows, including streaming and failed records, while preserving the underlying conversation history. Switching back restores the saved category preferences. Turn off conversation reading to release its timeline contributions without disabling attachments or session history.
+
+Streaming prose, image messages, attachments, unsupported Markdown, file links, unknown tool shapes, and oversized content retain host rendering. Image-only messages can still use Essentials' gallery; mixed image and text messages stay native. Presentation follows the active Paseo theme. Essentials does not contribute or switch themes.
+
+These controls replace the conversation features previously bundled with the removed Codex theme package. Existing preferences can be moved to Essentials without changing its media settings; see the [migration guide](../../docs/migration.md#会话阅读并入-essentials). Preferences are scoped to the daemon host.
+
+The [conversation reading contract](../../docs/conversation-reading.md) documents content ownership, plugin coexistence, settings, and cleanup requirements.
 
 ### Conversation media
 
@@ -64,7 +74,7 @@ Run these commands from the repository root:
     pnpm --filter @chlrc/paseo-ux typecheck
     pnpm --filter @chlrc/paseo-ux test
 
-The package uses the repository's pnpm workspace and lockfile. Install or reload the local plugin after changing code to pick up the new bundle.
+The package uses the repository's pnpm workspace and lockfile. Install or reload the local plugin after changing code to pick up the new bundle. A fixed Marked build and its license are included under shared/conversation/vendor; run pnpm --filter @chlrc/paseo-ux build:markdown when intentionally updating that parser.
 
 ### Session restore configuration
 

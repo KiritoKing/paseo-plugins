@@ -9,6 +9,7 @@ import {
   readMedia,
   resolveMedia,
 } from "../shared/contracts";
+import { defaultAppearance } from "../shared/conversation/appearance";
 import { listSessions, restoreSession } from "../shared/sessions";
 
 function harness(values: Record<string, unknown> = {}, status = "ready") {
@@ -26,7 +27,10 @@ function harness(values: Record<string, unknown> = {}, status = "ready") {
     },
   };
   const cleanup = contribute({
-    registerSettings: () => ({ read: async () => state }),
+    registerSettings: (definition: { id: string }) => ({
+      read: async () =>
+        definition.id === "appearance" ? { status: "ready", values: defaultAppearance } : state,
+    }),
     handle: (rpc: unknown, handler: (input: never, context: never) => Promise<unknown>) => {
       handlers.set(rpc, handler);
     },
