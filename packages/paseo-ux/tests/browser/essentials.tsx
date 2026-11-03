@@ -1,9 +1,10 @@
 import type { PluginClientContext, PluginSurfaceProps } from "@getpaseo/plugin/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { type ComponentType, useEffect, useState } from "react";
+import { type ComponentType, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ImageGallery } from "../../client/gallery";
 import { MediaPanel } from "../../client/panel";
+import { ImagePreview } from "../../client/preview";
 import { MediaSettings } from "../../client/settings";
 import contribute from "../../index.client";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./essentials-host";
 import { syntheticHostTheme } from "./host-theme";
 import { runImageChecks } from "./image-checks";
+import { runImageLoadChecks } from "./image-load-checks";
 
 const registrations = new Map<string, { visible?: boolean }>();
 const settingsScreens = new Map<string, ComponentType<PluginSurfaceProps>>();
@@ -73,16 +75,21 @@ function App() {
   const [route, setRoute] = useState("attachments");
   const [agentId, setAgentId] = useState("sample");
   const [compact, setCompact] = useState(window.innerWidth < 700);
+  const [previewCase, setPreviewCase] = useState<string | null>(null);
+  const [imageCheckResult, setImageCheckResult] = useState("");
+  const previewAttempts = useRef(0);
   const [, render] = useState(0);
   useEffect(() => {
     const callback = () => render((value) => value + 1);
     callbacks.add(callback);
     const stop = contribute(client);
     window.runImageChecks = runImageChecks;
+    window.runImageLoadChecks = runImageLoadChecks;
     return () => {
       callbacks.delete(callback);
       stop();
       delete window.runImageChecks;
+      delete window.runImageLoadChecks;
     };
   }, []);
   useEffect(() => {
@@ -103,7 +110,7 @@ function App() {
         <span> Synthetic host APIs; real React Native Web components.</span>
       </header>
       <nav aria-label="Fixture controls">
-        {["attachments", "features", "reading", "gallery"].map((value) => (
+        {["attachments", "features", "reading", "gallery", "image-load"].map((value) => (
           <button type="button" key={value} onClick={() => setRoute(value)}>
             {value}
           </button>
@@ -126,7 +133,30 @@ function App() {
         <button type="button" onClick={() => delayNextHistory(agentId)}>
           Delay next history response
         </button>
+        <button
+          type="button"
+          disabled={imageCheckResult.startsWith("Running ")}
+          onClick={async () => {
+            setImageCheckResult("Running image load checks…");
+            setImageCheckResult(JSON.stringify(await runImageLoadChecks()));
+          }}
+        >
+          Run image load checks
+        </button>
+        <button
+          type="button"
+          disabled={imageCheckResult.startsWith("Running ")}
+          onClick={async () => {
+            setImageCheckResult("Running image interaction checks…");
+            setImageCheckResult(JSON.stringify(await runImageChecks()));
+          }}
+        >
+          Run image interaction checks
+        </button>
       </nav>
+      {imageCheckResult ? (
+        <output aria-label="Image check result">{imageCheckResult}</output>
+      ) : null}
       <aside aria-label="Registration state">
         {Array.from(registrations, ([id, state]) => (
           <span key={id} data-registration={id} data-visible={state.visible}>
@@ -162,6 +192,41 @@ function App() {
             }}
             timestamp={new Date()}
           />
+        ) : null}
+        {route === "image-load" ? (
+          <section aria-label="Image load failure cases">
+            {["valid images", "renderer failure", "resolver failure"].map((value) => (
+              <button
+                type="button"
+                key={value}
+                onClick={() => {
+                  previewAttempts.current = 0;
+                  setPreviewCase(value);
+                }}
+              >
+                Open {value}
+              </button>
+            ))}
+            {previewCase ? (
+              <ImagePreview
+                {...props}
+                images={[
+                  { source: "first-preview.png", label: "First preview" },
+                  { source: "second-preview.png", label: "Second preview" },
+                ]}
+                index={0}
+                resolve={async () => {
+                  if (previewAttempts.current++ === 0) {
+                    if (previewCase === "resolver failure") throw new Error("Synthetic read error");
+                    if (previewCase === "renderer failure")
+                      return "data:image/png;base64,aW52YWxpZA==";
+                  }
+                  return sampleImage;
+                }}
+                onClose={() => setPreviewCase(null)}
+              />
+            ) : null}
+          </section>
         ) : null}
       </main>
     </QueryClientProvider>

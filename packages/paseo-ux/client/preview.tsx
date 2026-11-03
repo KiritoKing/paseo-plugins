@@ -66,10 +66,15 @@ export function ImagePreview({
   });
   const boundsRef = useRef(bounds);
   boundsRef.current = bounds;
-  const [uri, setUri] = useState("");
+  const [resolved, setResolved] = useState({ key: "", uri: "" });
   const [loadError, setLoadError] = useState("");
   const [failed, setFailed] = useState(false);
   const [retry, setRetry] = useState(0);
+  const requestKey = JSON.stringify([selectedIndex, image?.source, image?.uri, retry]);
+  // Never mount a previous attempt's URI while the current resolver is pending.
+  const uri = image?.uri || (resolved.key === requestKey ? resolved.uri : "");
+  const requestKeyRef = useRef(requestKey);
+  requestKeyRef.current = requestKey;
   const [detailsOpen, setDetailsOpen] = useState(false);
   const resolveRef = useRef(resolve);
   resolveRef.current = resolve;
@@ -88,6 +93,19 @@ export function ImagePreview({
       commitViewport(clampViewport(viewportRef.current, next));
     },
     [commitViewport],
+  );
+  const updateImageSize = useCallback(
+    (source: string | undefined, width: number, height: number) => {
+      if (
+        selectedImageRef.current?.source === source &&
+        Number.isFinite(width) &&
+        Number.isFinite(height) &&
+        width > 0 &&
+        height > 0
+      )
+        updateBounds({ imageWidth: width, imageHeight: height });
+    },
+    [updateBounds],
   );
   const select = (next: number) => {
     if (next < 0 || next >= images.length || next === selectedRef.current) return;
@@ -149,7 +167,6 @@ export function ImagePreview({
   useEffect(() => {
     const currentImage = selectedImageRef.current;
     let live = true;
-    setUri(currentImage?.uri ?? "");
     setFailed(false);
     setLoadError("");
     reset();
@@ -159,7 +176,7 @@ export function ImagePreview({
       if (resolver) {
         void resolver(currentImage)
           .then((value) => {
-            if (live && value) setUri(value);
+            if (live && value) setResolved({ key: requestKey, uri: value });
             else if (live) setLoadError("图片地址为空");
           })
           .catch(() => {
@@ -170,28 +187,27 @@ export function ImagePreview({
     return () => {
       live = false;
     };
-  }, [image?.source, image?.uri, retry, reset, updateBounds]);
+  }, [requestKey, reset, updateBounds]);
 
   useEffect(() => {
     if (!uri) return;
     let live = true;
     const source = selectedImageRef.current?.source;
-    // Image onLoad payloads differ between RN and RNW. getSize is the public
-    // cross-platform contract for intrinsic dimensions on both runtimes.
+    // Size lookup is optional metadata, not a prerequisite for rendering.
+    // Native onLoad can also supply dimensions when getSize is unavailable.
     Image.getSize(
       uri,
       (width, height) => {
-        if (live && selectedImageRef.current?.source === source)
-          updateBounds({ imageWidth: width, imageHeight: height });
+        if (live && requestKeyRef.current === requestKey) updateImageSize(source, width, height);
       },
       () => {
-        if (live) setFailed(true);
+        // Only the rendered Image's onError determines a decoding failure.
       },
     );
     return () => {
       live = false;
     };
-  }, [uri, image?.source, retry, updateBounds]);
+  }, [uri, requestKey, updateImageSize]);
 
   const onCanvasLayout = (event: {
     nativeEvent: { layout: { width: number; height: number } };
@@ -376,11 +392,21 @@ export function ImagePreview({
                   }}
                 >
                   <Image
-                    key={`${uri}:${retry}`}
+                    key={`${requestKey}:${uri}`}
                     source={{ uri }}
                     resizeMode="contain"
+                    resizeMethod="resize"
                     style={{ width: "100%", height: "100%", transform: [{ scale: zoom }] }}
-                    onError={() => setFailed(true)}
+                    onLoad={(event) => {
+                      if (requestKeyRef.current !== requestKey) return;
+                      // RNW emits a browser event without nativeEvent.source.
+                      const intrinsic = event.nativeEvent?.source;
+                      if (intrinsic)
+                        updateImageSize(image.source, intrinsic.width, intrinsic.height);
+                    }}
+                    onError={() => {
+                      if (requestKeyRef.current === requestKey) setFailed(true);
+                    }}
                     accessibilityLabel={image.label}
                     accessibilityHint={
                       gesturesEnabled

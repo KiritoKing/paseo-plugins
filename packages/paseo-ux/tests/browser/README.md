@@ -22,5 +22,6 @@ pnpm fixtures:serve
 7. 刷新页面后切换 Empty，点击 Delay next history response，再点击面板的 Refresh attachments，并在 600ms 内点击 Add first attachment。旧请求在 1200ms 后返回空页；面板应自动继续请求并显示 6 个合成附件，无需手动再次刷新。
 8. 进入 reading，切换仅输出、切回按类别设置、关闭／开启会话排版。Registration state 中仅阅读 transformer 改变，图片库、附件和会话项保持。关闭阅读后附件列表和图片 Modal 仍可使用。
 9. 在 features 关闭图片聚合及附件，阅读 transformer 与会话项保持；在独立 conversation-ui 夹具检查完成／流式状态的仅输出、切回类别偏好，以及浅深色和窄窗。
+10. 点击 Run image load checks（或运行 `await window.runImageLoadChecks()`），检查尺寸查询失败时缩略图和大图仍能显示、查询未完成时可切图、切图／关闭后迟到回调无效，以及真实解码错误和读取错误在重试后恢复。该检查仅在夹具内临时替换公开 `Image.getSize`，结束后还原；原生 `onLoad` 的尺寸载荷与 Android 解码仍须设备验收。Run image interaction checks 按钮运行第 2 步的既有交互回归；两种检查均在 Image check result 中显示结果。
 
 夹具截图只可用作开发证据，不可冒充市场要求的实际 Paseo 界面截图。原生 iOS/Android 的安全区域、系统返回、旋转、焦点和真实触控仍需设备验收。当前证据见 [VALIDATION.md](../../VALIDATION.md)。

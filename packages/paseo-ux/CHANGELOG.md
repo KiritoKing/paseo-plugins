@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.3.2
+
+- Keep full-screen images visible when the optional image-size lookup fails. Native image load events can supply dimensions; only an actual image render failure shows the load-error state.
+- Bind resolved image URLs and load callbacks to the selected image and retry attempt, so a previous failed image cannot overwrite a successful retry.
+- Use the same Android image resizing method as gallery thumbnails. Add repeatable fault-injection checks for size lookup failures, pending and late callbacks, image decode errors, read errors, and retry recovery.
+
+## Earlier repository changes
 
 - Bundle the Markdown parser's self-contained declarations with its source so clean Git and npm installations do not need the development-only `marked` package during host compilation.
 - Merge conversation reading from the removed standalone Codex theme package: Markdown and code layout, collapsible reasoning, optional shell records, and output-only mode. Preserve host-scoped appearance preferences separately from media settings and keep image gallery ownership compatible.
@@ -19,6 +25,6 @@
 - Handle Escape in the viewer's own keyboard surface instead of relying on the host modal's timing-dependent key handling, so closing the preview no longer depends on which modal is registered as active.
 - Keep desktop input inside the explicit `client/web.ts` adapter using React Native Web's public element props. Essentials still avoids DOM globals, host DOM access, injected menus, and prototype patches.
 
-## Current package version (0.3.1)
+## Previous package version (0.3.1)
 
 Repository candidate only; this entry does not claim npm or marketplace publication. The image viewer again supports desktop wheel zoom, drag pan, double-click reset, and arrow-key navigation next to touch gestures. Validation evidence is recorded in `VALIDATION.md`.
