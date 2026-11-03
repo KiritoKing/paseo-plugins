@@ -154,21 +154,21 @@ export async function runImageChecks() {
     new Touch({ identifier: 1, target: surface, clientX: a[0], clientY: a[1] }),
     new Touch({ identifier: 2, target: surface, clientX: b[0], clientY: b[1] }),
   ];
-  const touchEvent = (type, list) =>
+  const touchEvent = (type, list, changed = list) =>
     surface.dispatchEvent(
       new TouchEvent(type, {
         bubbles: true,
         cancelable: true,
         touches: list,
         targetTouches: list,
-        changedTouches: list,
+        changedTouches: changed,
       }),
     );
   try {
     touchEvent("touchstart", touches([center[0] - 60, center[1]], [center[0] + 60, center[1]]));
     touchEvent("touchmove", touches([center[0] - 140, center[1]], [center[0] + 140, center[1]]));
     touchEvent("touchmove", touches([center[0] - 200, center[1]], [center[0] + 200, center[1]]));
-    touchEvent("touchend", []);
+    touchEvent("touchend", [], touches([center[0] - 200, center[1]], [center[0] + 200, center[1]]));
     await frame();
     assert(zoom() > beforePinch, "pinch zooms in");
   } catch {

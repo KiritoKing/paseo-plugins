@@ -1,5 +1,13 @@
 # 验证记录
 
+## Essentials 移动端图片预览（2026-11-03）
+
+基于主干 `fc0a3b21c9930c29da500cda57347734d496c8aa`，macOS arm64、Node 24.22.0、pnpm 10.34.7；Essentials 版本更新为 0.3.2。修复可选尺寸查询阻断实际图片，以及坏图重试时旧 URI／错误污染新尝试的问题。
+
+完整 `pnpm check` 通过，包含 153 项测试、4 个浏览器夹具和两包隔离消费者检查。Chrome 组件夹具新增 14 项加载故障回归通过，既有 14 项图片交互回归通过；检查了宽窗、390×844 竖屏和 800×360 横屏。真实 Android／iOS 与 Paseo 客户端未验收，远端 CI 和发行状态另行读回。详见 [Essentials 验证记录](packages/paseo-ux/VALIDATION.md)。
+
+---
+
 ## 干净 Git 安装类型依赖（2026-10-21）
 
 基于主干 `72f52af`，macOS arm64、Node.js 24.22.0、pnpm 10.34.7、Paseo daemon 0.12.0。
