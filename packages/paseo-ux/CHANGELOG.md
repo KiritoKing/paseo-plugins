@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- Add per-turn Git changes: timeline cards with changed paths, line counts and commits, a saved-diff panel, before-and-after image previews, and paginated agent history through the Command Center.
+- Compare start and end working-tree snapshots using an isolated Git index. Preserve existing staging, include eligible untracked files, show shared-directory attribution warnings, and bind diff reads to recorded agent/turn/file entries.
+- Persist bounded history and pending starts on the daemon, retain snapshot trees with dedicated refs, and remove expired history and refs. Explain oversized files, images, truncated previews and unavailable snapshots in the UI.
+- Add an independent Turn changes switch to Features, with migrated existing preferences and cleanup when disabled. This is an independent implementation of the behavior described by HiepPP's Turn Diff, without bundling that plugin.
+
 ## 0.3.2
 
 - Keep full-screen images visible when the optional image-size lookup fails. Native image load events can supply dimensions; only an actual image render failure shows the load-error state.

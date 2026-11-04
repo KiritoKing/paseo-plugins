@@ -1,12 +1,13 @@
 # Paseo Essentials
 
-Paseo Essentials adds conversation reading controls, attachment browsing, image galleries, and workspace session history to Paseo. The npm package is @chlrc/paseo-ux. The manifest ID remains paseo-ux to preserve the existing plugin identity and settings namespace.
+Paseo Essentials adds conversation reading controls, per-turn Git changes, attachment browsing, image galleries, and workspace session history to Paseo. The npm package is @chlrc/paseo-ux. The manifest ID remains paseo-ux to preserve the existing plugin identity and settings namespace.
 
 ## Requirements
 
 - Paseo app and daemon 0.11.2 or later.
 - Node.js 22 or 24 and pnpm 10.34.7 for repository development.
 - Session restoration requires the public Paseo CLI on the daemon host's PATH.
+- Turn changes requires Git on that host's PATH and a repository with an existing commit.
 
 ## Install from this checkout
 
@@ -30,6 +31,16 @@ These controls replace the conversation features previously bundled with the rem
 
 The [conversation reading contract](../../docs/conversation-reading.md) documents content ownership, plugin coexistence, settings, and cleanup requirements.
 
+### Turn changes
+
+After a turn that changes files or creates commits, Essentials adds a timeline card with changed paths, line counts and commit subjects. Select a file to open its saved diff in the Turn changes panel. Image changes offer before-and-after previews. The card lists up to 20 files and 10 commits; View all changes opens the recorded turn. Command Center → Essentials · Open turn changes opens All turns, with pagination through this agent's retained history.
+
+Turn changes is enabled by default and independent of conversation reading, attachments and session history. Turn it off in Essentials → Features to stop new snapshots and hide its cards and command; retained history remains on the daemon. There is no retroactive capture of earlier turns. Non-Git directories, repositories without an initial commit, and turns without a usable start snapshot do not produce a card. Concurrent turns sharing a Git worktree display a warning because their edits cannot be attributed separately.
+
+Snapshots compare working files at turn start and end, including changes already present at the start as the baseline. A separate temporary index preserves the real staging area. Eligible untracked files are included, ignored files are excluded, and untracked files over 1 MiB are listed without saved contents. Tracked files have no corresponding size exclusion. See Data access and limits below for storage and retention.
+
+This feature independently implements the behavior described by [HiepPP's Turn Diff](https://paseo.sh/plugins/hieppp/turn-diff). Running multiple plugins that generate turn cards can produce duplicate cards.
+
 ### Conversation media
 
 The Media composer entry appears after a metadata check finds attachments in the conversation. You can also open the panel with the Command Center attachment action or the /media command. Search by name or source, filter by media type, and load older history. The metadata check pages through conversation history so an empty newest page does not hide older attachments.
@@ -52,6 +63,7 @@ Preferences are scoped to the selected host and apply to every device connected 
 - Image gestures enables zoom, pan, and reset gestures, including desktop wheel zoom. The default is on. Arrow-key navigation is unaffected by this switch.
 - Session history enables the workspace session list and restore actions. The default is on.
 - Audio playback enables new playback requests for supported local audio. The default is on. Paseo exposes no stop control for an already playing clip.
+- Turn changes enables per-turn Git snapshots, timeline cards and saved change history. The default is on.
 
 ## Host interaction checks
 
@@ -59,7 +71,13 @@ See [VALIDATION.md](VALIDATION.md) for evidence and remaining device checks, and
 
 ## Data access and limits
 
-The daemon finds media references in the selected conversation's public timeline and structured tool results. It does not scan workspace directories. Before reading local image or audio content, it confirms the source appears in that conversation's history. A referenced path can be outside the workspace and is read on the daemon host. Local image and supported audio reads are limited to 16 MiB per item. HTTP(S) resources are not fetched by the daemon; the client opens their original source through Paseo's external URL handler.
+For attachments, the daemon finds media references in the selected conversation's public timeline and structured tool results without scanning workspace directories. Before reading local image or audio content, it confirms the source appears in that conversation's history. A referenced path can be outside the workspace and is read on the daemon host. Local image and supported audio reads are limited to 16 MiB per item. HTTP(S) resources are not fetched by the daemon; the client opens their original source through Paseo's external URL handler.
+
+Turn changes reads the agent's Git repository at turn boundaries. Snapshot contents remain in its Git object database, retained by private refs under `refs/paseo-ux/turns/`. Ordinary branch pushes exclude these refs; mirror pushes include them. The daemon saves paths, commit subjects, snapshot identifiers and turn metadata under `PASEO_HOME/plugin-data/paseo-ux/turn-diff` (default `~/.paseo/plugin-data/paseo-ux/turn-diff`) with owner-only permissions. When history first loads and after recording a turn, it prunes records older than 30 days or beyond 2,000 and cleans up their snapshot refs. Removing a ref leaves its objects until Git garbage collection. Pending starts can survive plugin reload for one day; timeline cards follow the daemon's timeline lifetime, while the panel reads saved history.
+
+Saved diff and image requests are bound to recorded agent, turn and file entries; clients cannot select arbitrary repositories or refs. Diff previews are limited to 200,000 characters and 2,000 rendered rows. Images over 3 MiB are not previewed. Snapshot errors, unavailable repositories and expired history cannot reconstruct missing changes. Diff text and image data travel to the connected Paseo client through plugin RPC; this feature makes no network requests of its own.
+
+Capture stops at 50,000 paths, 1 GiB of input, or a 120-second snapshot deadline. A turn without a complete snapshot cannot provide saved file diffs. Oversized untracked files are compared by size, modification time and mode only; content changes that preserve those values cannot be detected.
 
 The index follows the host's projected conversation history, including its merged messages and tool results. It covers references exposed in message text and tool details, rather than every raw event or separate attachment payload. Older tool details replaced by the host may no longer appear in this view.
 

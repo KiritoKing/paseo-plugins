@@ -23,5 +23,6 @@ pnpm fixtures:serve
 8. 进入 reading，切换仅输出、切回按类别设置、关闭／开启会话排版。Registration state 中仅阅读 transformer 改变，图片库、附件和会话项保持。关闭阅读后附件列表和图片 Modal 仍可使用。
 9. 在 features 关闭图片聚合及附件，阅读 transformer 与会话项保持；在独立 conversation-ui 夹具检查完成／流式状态的仅输出、切回类别偏好，以及浅深色和窄窗。
 10. 点击 Run image load checks（或运行 `await window.runImageLoadChecks()`），检查尺寸查询失败时缩略图和大图仍能显示、查询未完成时可切图、切图／关闭后迟到回调无效，以及真实解码错误和读取错误在重试后恢复。该检查仅在夹具内临时替换公开 `Image.getSize`，结束后还原；原生 `onLoad` 的尺寸载荷与 Android 解码仍须设备验收。Run image interaction checks 按钮运行第 2 步的既有交互回归；两种检查均在 Image check result 中显示结果。
+11. 点击 Run turn changes checks（或运行 `await window.runTurnDiffChecks()`），验证实际入口注册的回合卡片、旧卡片直接打开、行号、重命名、二进制与缺失快照、2,000 行截断、错误重试、迟到响应不串会话、历史分页、图片前后解码和独立开关。`turn-card` 与 `turn-changes` 可单独查看卡片和面板，Toggle fixture theme 检查浅深配色。用 390×844 和 800×360 检查滚动与图片纵向排列；Turn changes 的服务端 Git 行为由真实临时仓库测试单独验证。
 
 夹具截图只可用作开发证据，不可冒充市场要求的实际 Paseo 界面截图。原生 iOS/Android 的安全区域、系统返回、旋转、焦点和真实触控仍需设备验收。当前证据见 [VALIDATION.md](../../VALIDATION.md)。

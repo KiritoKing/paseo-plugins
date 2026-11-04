@@ -63,6 +63,7 @@ function harness(
   const transformers = new Map<string, PluginTimelineTransformerContribution>();
   const renderers = new Map<string, unknown>();
   const screens = new Map<string, unknown>();
+  const panels = new Map<string, unknown>();
   const commands = new Map<string, unknown>();
   const headerButtons = new Map<string, unknown>();
   const observers = new Set<EventObserver>();
@@ -100,8 +101,9 @@ function harness(
       commands.set(definition.id, definition);
       return () => commands.delete(definition.id);
     },
-    addWorkspacePanel() {
-      return () => {};
+    addWorkspacePanel(definition: { id: string }) {
+      panels.set(definition.id, definition);
+      return () => panels.delete(definition.id);
     },
     addTimelineRenderer(definition: { kind: string }) {
       if (failConversationRenderer && definition.kind.startsWith("readable-"))
@@ -158,6 +160,7 @@ function harness(
     transformers,
     renderers,
     screens,
+    panels,
     commands,
     headerButtons,
     registrationOrder,
@@ -323,4 +326,39 @@ test("optional conversation registration failures leave Essentials media and ses
   assert.equal(h.transformers.size, 0);
   assert.equal(h.renderers.size, 0);
   assert.equal(h.observerCount(), 0);
+});
+
+test("turn changes controls its command independently and cleans up its panel and renderer", async () => {
+  const h = harness();
+  h.setMedia({ turnDiffEnabled: false });
+  const contribute = await loadContribution();
+  const stop = contribute(h.client);
+  await settle();
+  assert.equal(h.commands.has("turn-changes"), false);
+  assert.ok(h.renderers.has("turn-changes"));
+  assert.ok(h.panels.has("turn-changes"));
+
+  h.setMedia({ turnDiffEnabled: true });
+  h.emit("media");
+  await settle();
+  const command = h.commands.get("turn-changes") as {
+    onSelect(context: unknown): void;
+  };
+  const opened: string[] = [];
+  command.onSelect({
+    agent: { id: "synthetic-agent" },
+    openPanel: (id: string) => opened.push(id),
+  });
+  assert.deepEqual(opened, ["turn-changes"]);
+
+  h.setMedia({ turnDiffEnabled: false });
+  h.emit("media");
+  await settle();
+  assert.equal(h.commands.has("turn-changes"), false);
+  assert.ok(h.commands.has("sessions"));
+  assert.ok(h.transformers.has("assistant-images"));
+  assert.ok(h.transformers.has("readable-messages"));
+  await stop();
+  assert.equal(h.panels.size, 0);
+  assert.equal(h.renderers.size, 0);
 });

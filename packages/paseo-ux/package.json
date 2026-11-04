@@ -1,6 +1,6 @@
 {
   "name": "@chlrc/paseo-ux",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "files": [
     "paseo-plugin.json",
     "OVERVIEW.md",
@@ -35,7 +35,7 @@
     "zod": "^4.4.3"
   },
   "license": "MIT",
-  "description": "Conversation reading, attachments, image viewing, and everyday session tools for Paseo.",
+  "description": "Conversation reading, turn changes, attachments, image viewing, and session tools for Paseo.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/KiritoKing/paseo-plugins.git",

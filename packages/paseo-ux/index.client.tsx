@@ -14,6 +14,7 @@ import { makeSessionControls } from "./client/session-controls";
 import { createSessionDialogs } from "./client/session-dialogs";
 import { makeSessionOpener } from "./client/session-opener";
 import { MediaSettings } from "./client/settings";
+import { registerTurnChanges } from "./client/turn-diff";
 import { type FeatureValues, listMedia, readFeatures } from "./shared/contracts";
 import { extractImageOnlyMessage } from "./shared/media";
 
@@ -29,6 +30,7 @@ export default function contribute(client: PluginClientContext) {
   const openAgent = (agentId: string) =>
     client.openScreen({ screenId: "sessions", params: { agentId, request: String(Date.now()) } });
   const SessionIcon = makeSessionControls(dialogs, openAgent);
+  const turnChanges = registerTurnChanges(client);
 
   function Settings(props: PluginSurfaceProps) {
     return <MediaSettings {...props} onChange={settingsChanged} />;
@@ -312,6 +314,7 @@ export default function contribute(client: PluginClientContext) {
 
   function apply(next?: FeatureValues) {
     if (disposed) return;
+    turnChanges.update(!!next?.turnDiffEnabled);
     if (!!next?.attachmentsEnabled !== !!values?.attachmentsEnabled) {
       stopAttachments?.();
       stopAttachments = next?.attachmentsEnabled ? startAttachments() : undefined;
@@ -419,6 +422,7 @@ export default function contribute(client: PluginClientContext) {
     stopGalleries?.();
     dialogs.dispose();
     const pending = [
+      turnChanges.dispose(),
       ...(stopConversation ? [Promise.resolve().then(stopConversation)] : []),
       ...cleanups
         .splice(0)

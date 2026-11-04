@@ -9,13 +9,14 @@ export const featureValuesSchema = z.object({
   imageGesturesEnabled: z.boolean().default(true),
   sessionsEnabled: z.boolean().default(true),
   audioPlaybackEnabled: z.boolean().default(true),
+  turnDiffEnabled: z.boolean().default(true),
 });
 export type FeatureValues = z.infer<typeof featureValuesSchema>;
 
 export const mediaSettings = defineSettings({
   id: "media",
   scope: "host",
-  version: 2,
+  version: 3,
   schema: featureValuesSchema,
   migrate: (values) => featureValuesSchema.parse(values),
 });

@@ -9,6 +9,9 @@ const palettes = {
     foregroundMuted: "#475569",
     border: "#cbd5e1",
     accent: "#2563eb",
+    accentForeground: "#ffffff",
+    statusSuccess: "#15803d",
+    statusWarning: "#a16207",
     statusDanger: "#b91c1c",
   },
   dark: {
@@ -19,6 +22,9 @@ const palettes = {
     foregroundMuted: "#cbd5e1",
     border: "#475569",
     accent: "#60a5fa",
+    accentForeground: "#111827",
+    statusSuccess: "#86efac",
+    statusWarning: "#fde047",
     statusDanger: "#f87171",
   },
 } satisfies Record<"light" | "dark", PluginTheme["colors"]>;
