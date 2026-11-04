@@ -20,14 +20,13 @@ export type NavigationKeyInput = {
   isComposing?: boolean;
 };
 
-export type ViewerKeyAction = "previous" | "next" | "dismiss";
+export type ViewerKeyAction = "previous" | "next";
 
-/** Viewer keyboard actions: plain arrows navigate, plain Escape closes. */
+/** Plain arrows navigate. The host SDK Modal owns Escape dismissal. */
 export function viewerKeyAction(input: NavigationKeyInput): ViewerKeyAction | null {
   if (input.defaultPrevented || input.isComposing) return null;
   const chord = input.altKey || input.ctrlKey || input.metaKey || input.shiftKey;
   if (chord) return null;
-  if (input.key === "Escape") return "dismiss";
   if (input.key === "ArrowLeft") return "previous";
   if (input.key === "ArrowRight") return "next";
   return null;

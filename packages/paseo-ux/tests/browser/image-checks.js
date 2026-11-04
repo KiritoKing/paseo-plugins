@@ -1,6 +1,8 @@
 // Browser regression checks for the production image viewer. They drive the real
 // preview through DOM input only and report pass/fail names; run them from the
 // essentials fixture with `await window.runImageChecks()` after `pnpm fixtures:build`.
+import { hostInterrupts } from "./essentials-host";
+
 export async function runImageChecks() {
   const passed = [];
   const failed = [];
@@ -87,15 +89,21 @@ export async function runImageChecks() {
   };
   const keyTarget = () =>
     document.activeElement?.isConnected ? document.activeElement : document.body;
-  const key = async (value) => {
-    const target = keyTarget();
-    target.dispatchEvent(
-      new KeyboardEvent("keydown", { key: value, bubbles: true, cancelable: true }),
-    );
-    target.dispatchEvent(
-      new KeyboardEvent("keyup", { key: value, bubbles: true, cancelable: true }),
-    );
+  const keyPhase = async (type, value, options = {}) => {
+    const event = new KeyboardEvent(type, {
+      key: value,
+      bubbles: true,
+      cancelable: true,
+      ...options,
+    });
+    keyTarget().dispatchEvent(event);
     await frame();
+    return event;
+  };
+  const key = async (value, options) => {
+    await keyPhase("keydown", value, options);
+    // A real keyup follows focus after React has committed the keydown update.
+    await keyPhase("keyup", value, options);
   };
 
   clickButton("gallery");
@@ -175,9 +183,69 @@ export async function runImageChecks() {
     failed.push("pinch zooms in (touch events unavailable)");
   }
 
-  // Escape closes the viewer through the plugin's own keyboard handling.
-  await key("Escape");
-  await waitFor(() => !canvas(), "Escape closes the viewer");
-  assert(!canvas(), "Escape closes the viewer");
+  // Model host shortcuts without honoring defaultPrevented: preventing a default
+  // browser action alone must not let a handled key reach the conversation.
+  const hostKeys = [];
+  const hostShortcut = (event) => hostKeys.push(`${event.type}:${event.key}`);
+  for (const target of [document, window]) {
+    target.addEventListener("keydown", hostShortcut);
+    target.addEventListener("keyup", hostShortcut);
+  }
+  try {
+    await key("ArrowRight");
+    await key("ArrowLeft");
+    assert(hostKeys.length === 0, "viewer arrows do not reach host shortcuts in either phase");
+    hostKeys.length = 0;
+    await key("a");
+    assert(hostKeys.length === 4, "unhandled keys keep their normal propagation");
+    hostKeys.length = 0;
+    const beforeChord = counter();
+    await key("ArrowRight", { ctrlKey: true });
+    assert(
+      counter() === beforeChord && hostKeys.length === 4,
+      "modified arrows remain unclaimed by the viewer",
+    );
+
+    for (const focus of ["surface", "button"]) {
+      if (!canvas()) {
+        clickButton("View Sample 1");
+        await waitFor(canvas, `reopen viewer for ${focus} Escape check`);
+      }
+      if (focus === "button") {
+        const button = document.querySelector('[aria-label="Show image details"]');
+        button?.focus();
+        assert(
+          Boolean(button) && document.activeElement === button,
+          "viewer control takes focus before Escape",
+        );
+      }
+      hostKeys.length = 0;
+      const interruptedBefore = hostInterrupts.length;
+      const down = await keyPhase("keydown", "Escape");
+      await keyPhase("keyup", "Escape");
+      await waitFor(() => !canvas(), `Escape closes the viewer from ${focus}`);
+      assert(
+        !canvas() && down.defaultPrevented && !hostKeys.includes("keydown:Escape"),
+        `Escape from ${focus} is consumed by the host modal`,
+      );
+      assert(
+        hostInterrupts.length === interruptedBefore,
+        `Escape from ${focus} does not interrupt the conversation in the capture phase`,
+      );
+    }
+
+    hostKeys.length = 0;
+    const interruptedBefore = hostInterrupts.length;
+    await key("Escape");
+    assert(
+      hostKeys.length === 4 && hostInterrupts.length === interruptedBefore + 1,
+      "host Escape works again after the viewer closes",
+    );
+  } finally {
+    for (const target of [document, window]) {
+      target.removeEventListener("keydown", hostShortcut);
+      target.removeEventListener("keyup", hostShortcut);
+    }
+  }
   return { passed, failed };
 }

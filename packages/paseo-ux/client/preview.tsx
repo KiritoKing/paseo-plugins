@@ -1,16 +1,7 @@
 import type { PluginHostProps } from "@getpaseo/plugin/client";
-import { copyText, Icon, useToast } from "@getpaseo/plugin/client/react-native";
+import { copyText, Icon, Modal, useToast } from "@getpaseo/plugin/client/react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Image,
-  Modal,
-  Pressable,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  useWindowDimensions,
-  View,
-} from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import {
   clampViewport,
   fittedViewport,
@@ -47,7 +38,6 @@ export function ImagePreview({
   resolve,
   gesturesEnabled = true,
 }: ImagePreviewProps) {
-  const window = useWindowDimensions();
   const [selected, setSelected] = useState(index);
   const selectedIndex = Math.max(0, Math.min(images.length - 1, selected));
   const image = images[selectedIndex];
@@ -246,60 +236,32 @@ export function ImagePreview({
   const zoom = viewport.zoom;
   return (
     <Modal
-      visible
-      animationType="fade"
-      presentationStyle="fullScreen"
-      supportedOrientations={[
-        "portrait",
-        "portrait-upside-down",
-        "landscape",
-        "landscape-left",
-        "landscape-right",
-      ]}
-      backdropColor={theme.colors.surface0}
-      accessibilityLabel={`${image.label}, ${selectedIndex + 1} of ${images.length}`}
-      onRequestClose={onClose}
+      title={image.label}
+      open
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
     >
-      <SafeAreaView
-        accessibilityViewIsModal
-        importantForAccessibility="yes"
-        style={{
-          flex: 1,
-          width: window.width,
-          height: window.height,
-          backgroundColor: theme.colors.surface0,
-        }}
+      <Modal.Content
+        scrollable={false}
+        style={{ backgroundColor: theme.colors.surface0 }}
+        contentContainerStyle={{ flex: 1, padding: 0, gap: 0 }}
       >
         <DesktopKeySurface
-          actions={{ previous: () => move(-1), next: () => move(1), dismiss: onClose }}
+          actions={{ previous: () => move(-1), next: () => move(1) }}
           style={{ flex: 1 }}
         >
           <View style={{ flex: 1, paddingHorizontal: 8, backgroundColor: theme.colors.surface0 }}>
             <View style={{ height: 48, flexDirection: "row", alignItems: "center", gap: 8 }}>
               <Text
-                accessibilityRole="header"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={{
-                  flex: 1,
-                  minWidth: 0,
-                  color: theme.colors.foreground,
-                  fontSize: 16,
-                  fontWeight: "600",
-                }}
-              >
-                {image.label}
-              </Text>
-              <Text
                 accessibilityLabel={`第 ${selectedIndex + 1} 张，共 ${images.length} 张`}
-                style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}
+                style={{ flex: 1, color: theme.colors.foregroundMuted, fontSize: 12 }}
               >
                 {selectedIndex + 1} / {images.length}
               </Text>
               {button(detailsOpen ? "Hide image details" : "Show image details", "Info", () =>
                 setDetailsOpen((open) => !open),
               )}
-              {button("关闭图片预览", "X", onClose)}
             </View>
 
             <View
@@ -480,7 +442,7 @@ export function ImagePreview({
             ) : null}
           </View>
         </DesktopKeySurface>
-      </SafeAreaView>
+      </Modal.Content>
     </Modal>
   );
 }
