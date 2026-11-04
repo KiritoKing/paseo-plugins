@@ -1,7 +1,7 @@
 {
   "id": "paseo-ux",
   "name": "Paseo Essentials",
-  "description": "Conversation reading, attachments, image viewing, and everyday session tools.",
+  "description": "Conversation reading, per-turn Git changes, attachments, image viewing, and session tools.",
   "requirements": {
     "paseo": ">=0.11.2"
   }

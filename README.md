@@ -4,7 +4,7 @@
 
 | 插件 | Paseo 安装 ID | 声明兼容范围 | 用途 |
 | --- | --- | --- | --- |
-| [Paseo Essentials](packages/paseo-ux/README.md) | `paseo-ux` | `>=0.11.2` | 会话阅读与仅输出模式、附件、图片查看及工作区会话历史 |
+| [Paseo Essentials](packages/paseo-ux/README.md) | `paseo-ux` | `>=0.11.2` | 会话阅读、每轮 Git 变更、附件、图片查看及工作区会话历史 |
 | [AIW Companion](packages/paseo-aiw-companion/README.md) | `aiw-companion` | `>=0.11.1` | AIW 多仓文件树、Diff、搜索与布局 |
 
 历史验证记录涉及 Paseo 0.11.2。它是一个历史验证版本，不代表声明兼容范围中的所有版本都经过验证，也不构成对未来版本的保证。各插件的运行时要求和数据访问说明见对应 README。

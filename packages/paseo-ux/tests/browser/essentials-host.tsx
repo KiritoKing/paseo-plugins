@@ -16,6 +16,7 @@ import {
   fixture as conversationFixture,
   useSettings as useAppearanceSettings,
 } from "./conversation/host";
+import { turnRpc } from "./turn-diff-fixture";
 
 export { FlatList, ScrollView, TextInput };
 
@@ -31,6 +32,9 @@ context.fillStyle = "#fff";
 context.font = "bold 84px sans-serif";
 context.fillText("Essentials sample", 200, 520);
 export const sampleImage = canvas.toDataURL("image/png");
+context.fillStyle = "#15803d";
+context.fillRect(80, 80, 1440, 840);
+export const sampleAfterImage = canvas.toDataURL("image/png");
 const listeners = new Set<() => void>();
 const observers = new Set<{
   snapshot: (value: unknown) => void;
@@ -99,8 +103,8 @@ export function useSettings(definition?: { id: string }) {
   const appearance = useAppearanceSettings();
   return definition?.id === "appearance" ? appearance : media;
 }
-export function useAgent() {
-  return { title: "Synthetic conversation" };
+export function useAgent(id: string, selector = (value: unknown) => value) {
+  return selector({ ...agent(id), title: "Synthetic conversation" });
 }
 export function usePaseo() {
   return fakePaseo;
@@ -391,6 +395,8 @@ conversationFixture.subscribe(() => {
     });
 });
 export async function rpc(contract: { name: string }, raw: unknown): Promise<unknown> {
+  if (contract.name.startsWith("turn_changes."))
+    return turnRpc(contract.name, raw as Record<string, string>, sampleImage, sampleAfterImage);
   const input = raw as { agentId: string; assetId: string; cursor?: unknown };
   if (contract.name === "features.read") return values;
   if (contract.name === "settings.appearance.read")

@@ -12,6 +12,7 @@ test("media settings migration preserves v1 preferences and fills new defaults",
     imageGesturesEnabled: true,
     sessionsEnabled: true,
     audioPlaybackEnabled: true,
+    turnDiffEnabled: true,
   });
 });
 

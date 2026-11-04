@@ -137,6 +137,17 @@ export function MediaSettings({
           />
         </SettingsCard>
       </SettingsSection>
+      <SettingsSection title="Turn changes">
+        <SettingsCard>
+          <SettingsSwitch
+            label="Turn changes"
+            hint="Save Git snapshots around each agent turn and show changed files, commits, saved diffs and image comparisons. Requires Git and an existing commit."
+            value={values.turnDiffEnabled}
+            onValueChange={(turnDiffEnabled) => save({ turnDiffEnabled })}
+            disabled={state.saving}
+          />
+        </SettingsCard>
+      </SettingsSection>
       <SettingsSection title="Workspace sessions">
         <SettingsCard>
           <SettingsSwitch
