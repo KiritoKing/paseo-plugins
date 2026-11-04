@@ -54,9 +54,26 @@ async function snapshotState(repo: string) {
   return {
     head: git(repo, "rev-parse", "HEAD").trim(),
     index: await readFile(join(repo, ".git", "index")),
-    status: git(repo, "status", "--porcelain=v1"),
+    status: git(repo, "--no-optional-locks", "status", "--porcelain=v1"),
   };
 }
+
+test("observing repository state does not refresh the index", async () => {
+  const { base, repo } = await fixture();
+  try {
+    await writeFile(join(repo, "src", "answer.ts"), "const answer = 2;\n");
+    const before = await readFile(join(repo, ".git", "index"));
+    const first = await snapshotState(repo);
+    const second = await snapshotState(repo);
+    assert.deepEqual(first.index, before);
+    assert.deepEqual(second.index, before);
+    assert.equal(second.head, first.head);
+    assert.equal(second.status, first.status);
+    assert.match(first.status, /src\/answer\.ts/);
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
+});
 
 test("snapshots use a separate index, retain same-line changes and list large untracked paths", async () => {
   const { base, repo, storeDir } = await fixture();
@@ -117,7 +134,7 @@ test("snapshots use a separate index, retain same-line changes and list large un
   }
 });
 
-test("commit-only file changes are captured, while a clean empty commit emits no card", async () => {
+test("commit-only file changes and clean empty commits emit cards", async () => {
   const { base, repo, storeDir } = await fixture();
   const store = new TurnDiffStore({ dataDirectory: storeDir });
   try {
