@@ -10,10 +10,10 @@ test("wheel steps zoom around the pointer and non-wheel input stays neutral", ()
   assert.equal(wheelZoomFactor(Number.NaN), 1);
 });
 
-test("viewer keys navigate and dismiss only as plain keys", () => {
+test("viewer arrows navigate only as plain keys and leave Escape to the host modal", () => {
   assert.equal(viewerKeyAction({ key: "ArrowLeft" }), "previous");
   assert.equal(viewerKeyAction({ key: "ArrowRight" }), "next");
-  assert.equal(viewerKeyAction({ key: "Escape" }), "dismiss");
+  assert.equal(viewerKeyAction({ key: "Escape" }), null);
   assert.equal(viewerKeyAction({ key: "ArrowUp" }), null);
   assert.equal(viewerKeyAction({ key: "a" }), null);
   assert.equal(viewerKeyAction({ key: "Escape", shiftKey: true }), null);

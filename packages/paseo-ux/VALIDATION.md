@@ -1,3 +1,23 @@
+# 图片预览 Escape 隔离修复
+
+日期：2026-11-04。工作基线为 `d808541f52ecc425717cfa76b6eebb63374ed0d2`；检查对象为该基线后的修复工作树，最终源码以本记录所在提交为准。环境为 macOS arm64、Node 24.22.0、pnpm 10.34.7、公开 SDK 0.11.2。
+
+## 根因与实现
+
+- Paseo v0.14.0 的[全局快捷键监听](https://github.com/getpaseo/paseo/blob/v0.14.0/packages/app/src/hooks/use-keyboard-shortcuts.ts)在 window 捕获阶段先分发已注册弹层，再匹配快捷键；[agent-interrupt](https://github.com/getpaseo/paseo/blob/v0.14.0/packages/app/src/keyboard/keyboard-shortcuts.ts)绑定 Escape，覆盖预览控件所属的 other 焦点域。原查看器使用 React Native Modal，没有接入这个弹层注册链路，组件冒泡阶段的 preventDefault 或 stopPropagation 均晚于会话中断。
+- 查看器改用公开 SDK Modal/Modal.Content。由[宿主 Modal](https://github.com/getpaseo/paseo/blob/v0.14.0/packages/app/src/plugins/react-native/modal.tsx)接入 AdaptiveModalSheet 的弹层路由，提供标题、关闭控件、安全区和标准弹窗／底部面板尺寸；不再声明全窗口原生图片 Modal。图片画布在有界正文内伸缩。
+- Escape 不再由图片键盘面重复解释；方向键仍由查看器处理，并阻止已接管按键的两个阶段继续冒泡。没有加入 DOM 全局监听、私有宿主导入或依赖变更到运行时代码。
+
+## 验证证据与边界
+
+- 完整 `pnpm check` 通过：171 项测试（Essentials 94、AIW 15、工程 62），并通过样式、公开文件、依赖边界、类型、四个浏览器夹具构建、两个包的隔离消费者安装与入口编译。键盘分类测试明确将 Escape 交给宿主。
+- 旧检查仅验证关闭结果，且在同一目标上连续派发 keydown/keyup，漏掉捕获阶段中断和关闭后的焦点变化。新增合成宿主的 window 捕获路由及中断计数，并在两个阶段之间等待 React 更新、重新读取真实焦点。仅阻止冒泡的候选通过了冒泡检查，但预览面／按钮聚焦时的两项捕获阶段中断检查均失败；SDK Modal 方案通过这两个反例。
+- Paseo browser 执行实际生产查看器的 `runImageChecks()`：22 项通过、0 失败，覆盖缩放、拖拽、捏合、方向键、未处理按键、修饰键、控件实际聚焦、两种焦点下 Escape 关闭且不产生模拟会话中断，以及关闭后新的 Escape 恢复宿主行为。`runImageLoadChecks()` 另有 14 项通过、0 失败，覆盖尺寸查询失败、迟到回调、切图、解码／读取错误和重试。
+- 实际读取的夹具视口为 390×844，画布为 294×516，关闭及导航控件均在视口内，无文档横向溢出。后续 resize 请求未反映到实际视口，未计为其他尺寸验收；截图工具返回页面尚未绘制，未完成像素级视觉验收。
+- 浏览器使用真实 React Native Web 组件，但宿主弹层路由、会话中断和键盘输入为合成上下文。真实 Paseo 会话交互、iOS/Android 未验收；后续安装修订、精确修订的远端 CI 与发布状态须分别读回，不由上述检查推断。宿主源码核对不代替真实会话验收。
+
+---
+
 # 每轮 Git 变更验证
 
 日期：2026-11-04。版本：0.4.0。工作基线为 `1d7f6284ad8f927b7129cbe50d5d11e6652db08f`；检查对象为该基线后的功能工作树，最终源码以本记录所在提交为准。环境为 macOS arm64、Node 24.22.0、pnpm 10.34.7，最低公开 SDK 0.11.2。

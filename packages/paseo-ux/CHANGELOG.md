@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Present images through the public SDK Modal so Paseo routes Escape to the registered overlay before its capture-phase conversation interrupt shortcut. The preview now follows the host's dialog/sheet sizing and safe areas, with its title and close control supplied by the host.
+- Keep both phases of viewer arrow shortcuts inside the preview. Exercise a capture-phase host interrupt and document/window listeners in browser regression checks, including focused viewer controls, focus changes between key phases, and normal shortcut behavior after closing.
+
 ## 0.4.0
 
 - Add per-turn Git changes: timeline cards with changed paths, line counts and commits, a saved-diff panel, before-and-after image previews, and paginated agent history through the Command Center.

@@ -17,6 +17,7 @@ type KeyInput = {
   defaultPrevented: boolean;
   isComposing?: boolean;
   preventDefault?: () => void;
+  stopPropagation?: () => void;
   target?: { tagName?: string } | null;
 };
 type SurfaceHandle = {
@@ -30,6 +31,7 @@ type DesktopStyle = ViewStyle & { overscrollBehavior?: "auto" | "contain" | "non
 type DesktopViewProps = ViewProps & {
   onWheel?: (event: WheelInput) => void;
   onKeyDown?: (event: KeyInput) => void;
+  onKeyUp?: (event: KeyInput) => void;
   style?: StyleProp<DesktopStyle>;
   ref?: Ref<SurfaceHandle>;
 };
@@ -117,13 +119,12 @@ export function DesktopZoomSurface({
 export type DesktopNavigationActions = {
   previous: () => void;
   next: () => void;
-  dismiss: () => void;
 };
 
 /**
- * Desktop keyboard handling for the viewer: arrows navigate and Escape closes,
- * owned by the plugin instead of the host modal's key handling. Text entry keeps
- * its own keys. The surface takes focus on mount so keys work without a click.
+ * Own both phases of viewer arrows; Escape belongs to the SDK Modal so Paseo
+ * handles it before the conversation's capture-phase interrupt shortcut.
+ * Text entry keeps its own keys. The surface takes focus on mount.
  */
 export function DesktopKeySurface({
   actions,
@@ -136,17 +137,24 @@ export function DesktopKeySurface({
   style?: StyleProp<ViewStyle>;
 }) {
   const surfaceRef = useRef<SurfaceHandle | null>(null);
+  const ownedKeys = useRef(new Set<string>());
   useEffect(() => {
     surfaceRef.current?.focus?.();
   }, []);
   const handleKeyDown = (event: KeyInput) => {
     if (Platform.OS !== "web") return;
     const action = viewerKeyAction(event);
-    if (!action || (action !== "dismiss" && editableTarget(event))) return;
+    if (!action || editableTarget(event)) return;
     event.preventDefault?.();
+    event.stopPropagation?.();
+    ownedKeys.current.add(event.key);
     if (action === "previous") actions.previous();
     else if (action === "next") actions.next();
-    else actions.dismiss();
+  };
+  const handleKeyUp = (event: KeyInput) => {
+    if (Platform.OS !== "web" || !ownedKeys.current.delete(event.key)) return;
+    event.preventDefault?.();
+    event.stopPropagation?.();
   };
   return surface(
     {
@@ -155,6 +163,7 @@ export function DesktopKeySurface({
       focusable: true,
       style,
       onKeyDown: Platform.OS === "web" ? handleKeyDown : undefined,
+      onKeyUp: Platform.OS === "web" ? handleKeyUp : undefined,
     },
     children,
   );

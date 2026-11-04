@@ -1,6 +1,6 @@
 // Synthetic host APIs only. React Native Web primitives and production components
 // are real; this fixture cannot prove Paseo, iOS or Android acceptance.
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   FlatList,
   Modal as NativeModal,
@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   View,
+  type ViewProps,
 } from "react-native";
 import { featureValuesSchema, type MediaAsset } from "../../shared/contracts";
 import {
@@ -19,6 +20,32 @@ import {
 import { turnRpc } from "./turn-diff-fixture";
 
 export { FlatList, ScrollView, TextInput };
+
+// Paseo 0.14 dispatches registered host overlays before agent.interrupt in a
+// window capture listener. A plain React Native Modal is absent from that stack.
+const modalDismissers: Array<() => void> = [];
+export const hostInterrupts: string[] = [];
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (
+      event.key !== "Escape" ||
+      event.isComposing ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey
+    )
+      return;
+    const dismiss = modalDismissers.at(-1);
+    if (dismiss) {
+      event.preventDefault();
+      event.stopPropagation();
+      dismiss();
+    } else hostInterrupts.push("agent.interrupt");
+  },
+  true,
+);
 
 const canvas = document.createElement("canvas");
 canvas.width = 1600;
@@ -239,6 +266,16 @@ export function Modal({
   onOpenChange: (open: boolean) => void;
   children: React.ReactNode;
 }) {
+  const changeRef = useRef(onOpenChange);
+  changeRef.current = onOpenChange;
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = () => changeRef.current(false);
+    modalDismissers.push(dismiss);
+    return () => {
+      modalDismissers.splice(modalDismissers.indexOf(dismiss), 1);
+    };
+  }, [open]);
   return (
     <NativeModal visible={open} transparent onRequestClose={() => onOpenChange(false)}>
       <View
@@ -251,17 +288,48 @@ export function Modal({
         }}
       >
         <View
-          style={{ maxWidth: 560, width: "100%", padding: 16, gap: 12, backgroundColor: "#fff" }}
+          style={{
+            maxWidth: 560,
+            width: "100%",
+            height: "85%",
+            padding: 16,
+            gap: 12,
+            backgroundColor: "#fff",
+          }}
         >
-          <Text>{title}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text accessibilityRole="header" style={{ flex: 1 }}>
+              {title}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={() => onOpenChange(false)}
+            >
+              <Text>Close</Text>
+            </Pressable>
+          </View>
           {children}
         </View>
       </View>
     </NativeModal>
   );
 }
-Modal.Content = function Content({ children }: { children: React.ReactNode }) {
-  return <View style={{ gap: 12 }}>{children}</View>;
+Modal.Content = function Content({
+  children,
+  style,
+  contentContainerStyle,
+}: {
+  children: React.ReactNode;
+  scrollable?: boolean;
+  style?: ViewProps["style"];
+  contentContainerStyle?: ViewProps["style"];
+}) {
+  return (
+    <View style={[{ flex: 1, minHeight: 0 }, style]}>
+      <View style={[{ flex: 1, minHeight: 0, gap: 12 }, contentContainerStyle]}>{children}</View>
+    </View>
+  );
 };
 const baseAsset = {
   timestamp: "2026-10-20T00:00:00Z",

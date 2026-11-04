@@ -31,7 +31,7 @@ export async function runImageLoadChecks() {
   };
   const error = () => canvas()?.querySelector('[role="alert"]')?.textContent;
   const close = async () => {
-    click("关闭图片预览");
+    click("Close");
     await frame();
   };
   const original = Image.getSize;
